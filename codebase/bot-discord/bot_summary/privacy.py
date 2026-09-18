@@ -11,6 +11,7 @@ class PrivacyError(RuntimeError):
 
 _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("[EMAIL]", re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.I)),
+    ("[ROLE_MENTION]", re.compile(r"<@&\d+>")),
     ("[MENTION]", re.compile(r"<@!?\d+>")),
     ("[IP]", re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")),
     ("[DISCORD_ID]", re.compile(r"(?<!\w)\d{17,20}(?!\w)")),
