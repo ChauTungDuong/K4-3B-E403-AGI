@@ -1,7 +1,7 @@
 # AI SPEC — Trợ Lý Tóm Tắt Thông Báo Discord Theo Thứ Tự Ưu Tiên (Discord Priority Digest) · Nhóm AGI · Zone C6 - E403
 
 Hướng: [ ] A — VLearn  [x] B — Trợ lý Học viên  [ ] C — Làn mở  
-Loại: [x] Tối ưu tính năng có sẵn (Cải tiến bản tin bot) / Tính năng mới
+Loại: Tối ưu tính năng có sẵn (Cải tiến bản tin bot) / [x] Tính năng mới
 
 ## §1. User & Job
 - **Job executor + workflow (đính kèm worksheet JTBD / ảnh sơ đồ):** Học viên Khóa 4 vừa đăng nhập vào Discord sau thời gian bận (sau 24h hoặc sau nhiều giờ offline); quy trình gồm: Mở Discord → Nhìn danh sách kênh thông báo có tin chưa đọc → Cần xác định ngay các thông tin khẩn cấp (deadline, đổi phòng/link Zoom, nhiệm vụ học tập) → Thực hiện các hành động cần thiết đúng hạn.
@@ -236,6 +236,6 @@ Hệ thống không hỗ trợ giải bài tập hộ hoặc duyệt đơn xin n
 | Thời điểm | Đổi gì | Vì sao (trỏ về feedback/case nào) |
 |---|---|---|
 | 17/9 19:30 | Hoàn thành §1 & §2 và phân công theo Canvas CP1 | Chốt đề tài và bài toán nghiên cứu tại mốc CP1 |
-| 18/9 10:00 | Hoàn thiện §3, §4, §5, §6 (phân tích đối thủ, thiết kế, 4 nguyên tắc HAX/PAIR, 8 kịch bản 4 lớp chỗ khó, 4 nhánh UX) | Hoàn thành đầy đủ hồ sơ thiết kế trải nghiệm mốc CP2 |
+| 18/9 21:00 | Hoàn thiện §3, §4, §5, §6 (phân tích đối thủ, thiết kế, 4 nguyên tắc HAX/PAIR, 8 kịch bản 4 lớp chỗ khó, 4 nhánh UX) | Hoàn thành đầy đủ hồ sơ thiết kế trải nghiệm mốc CP2 |
 | 18/9 16:00 | Bổ sung §7: Golden Set 22 test case, khóa cứng Quality Bar định lượng và kết quả đo đạc thực tế | Hoàn thành kiểm thử nguyên mẫu AI thật mốc CP3 |
-| 18/9 21:00 | Chuẩn hóa toàn diện 9 phần của AI Spec phục vụ nghiệm thu Checkpoint 4 (CP4) | Đồng bộ các slash command (/summary, /chat, /trends), tên kênh thực tế và khóa chuẩn Quality Bar |
+| 18/9 20:00 | Chuẩn hóa toàn diện 9 phần của AI Spec phục vụ nghiệm thu Checkpoint 4 (CP4) | Đồng bộ các slash command (/summary, /chat, /trends), tên kênh thực tế và khóa chuẩn Quality Bar |
