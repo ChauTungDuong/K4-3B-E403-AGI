@@ -153,7 +153,16 @@ open_questions[]
 
 `SummaryResult` không được lưu vào database; nó chỉ tồn tại trong RAM cho đến khi gửi Discord.
 
-## 4. Luồng `/trends`
+## 4. Luồng `/chat input:...`
+
+`/chat` dùng cùng collector ưu tiên và PrivacySanitizer như `/summary`. Yêu cầu
+tự nhiên của người dùng được che PII trước khi gửi Gemini. Gemini trả structured
+output gồm `status`, `overview` và tối đa 5 section; code loại section không có
+`evidence_ref` hợp lệ rồi mới nối jump link Discord. Kết quả chỉ được gửi
+ephemeral cho người gọi. Yêu cầu ngoài phạm vi trả `refused`; câu hỏi không có
+căn cứ trả `not_found` thay vì tự suy đoán.
+
+## 5. Luồng `/trends`
 
 ```mermaid
 flowchart TD
@@ -215,7 +224,7 @@ TopicTrend
 
 Gemini không tự tạo `hot_score` hoặc `growth_rate`. Các giá trị này được tính từ message refs hợp lệ. Nếu phần lớn tin đến từ một tác giả, `hot_score` bị giảm để chống spam tạo trend giả.
 
-## 5. Dữ liệu được gửi, lưu và không lưu
+## 6. Dữ liệu được gửi, lưu và không lưu
 
 ```mermaid
 flowchart LR
@@ -242,7 +251,7 @@ flowchart LR
 | Guild ID và channel ID cấu hình | Không | Có | Chỉ xuất hiện trong channel mention/jump link Discord |
 | Bảng ánh xạ ID thật → alias | Không | Không | Không |
 
-## 6. Những nội dung hiện chưa đi qua pipeline
+## 7. Những nội dung hiện chưa đi qua pipeline
 
 - Attachment và nội dung file chưa được đọc.
 - Text chỉ nằm trong Discord embed chưa được đưa vào `content`.
@@ -253,7 +262,7 @@ flowchart LR
 
 Điều này có nghĩa `INCLUDE_BOT_MESSAGES=true` cho phép đọc text do bot/app khác gửi, nhưng chưa giúp đọc các app chỉ gửi Discord embed không có `message.content`.
 
-## 7. Ảnh hưởng của cấu hình
+## 8. Ảnh hưởng của cấu hình
 
 ```text
 INCLUDE_BOT_MESSAGES=false

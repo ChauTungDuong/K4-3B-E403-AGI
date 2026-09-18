@@ -46,6 +46,7 @@ Thành viên có quyền đọc kênh nguồn có thể dùng:
 
 ```text
 /summary channel:#thông-báo channel_2:#backend channel_3:#thảo-luận hours:24
+/chat input:"Chỉ liệt kê deadline dạng checklist" channel:#thông-báo hours:24
 /trends channel:#backend current_hours:24 baseline_days:7
 ```
 
@@ -59,6 +60,20 @@ tiếp, bot bỏ nguyên kênh đó và mọi kênh ưu tiên thấp hơn, chỉ
 đã lấy trọn vẹn, rồi báo rõ danh sách bị bỏ cho người gọi. Báo cáo định kỳ dùng
 thứ tự các kênh đã được thêm bằng `/add-source`; xóa rồi thêm lại một kênh sẽ
 đưa kênh đó xuống cuối thứ tự ưu tiên.
+
+`/chat` nhận yêu cầu tự nhiên trong tham số `input`. Có thể bỏ `channel` để
+dùng toàn bộ kênh nguồn đã cấu hình, hoặc chọn tối đa 6 kênh theo cùng thứ tự
+ưu tiên như `/summary`. Ví dụ:
+
+```text
+/chat input:"Tóm tắt các thay đổi lịch học thành bullet"
+/chat input:"Only show confirmed deadlines in English" channel:#thông-báo
+/chat input:"Có thông tin review cuối tuần không?" hours:48
+```
+
+Câu trả lời `/chat` chỉ hiện riêng cho người gọi, có link về message nguồn và
+vẫn áp dụng quy tắc lấy trọn từng kênh. Yêu cầu làm hộ bài, cấp quyền, duyệt
+nghỉ/gia hạn, tiết lộ danh tính/secret hoặc bỏ qua kiểm chứng sẽ bị từ chối.
 
 Kết quả được gửi vào kênh output đã cấu hình. Digest dùng khung 🔴/🟡/🟢 tối đa 8 dòng; bản tin trend dùng khung 🔥/💡 tối đa 10 dòng. Mỗi mục có channel mention và jump link tới tin gốc khi có bằng chứng hợp lệ. Trạng thái lệnh và lỗi chỉ hiện với người gọi.
 

@@ -9,13 +9,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
+from chat import ChatService
 from collector import DiscordCollector, PrioritizedCollection, SkippedChannel
 from config import settings
 from database import Database
 from gemini import GeminiClient
 from models import Message, SafeMessage
 from privacy import PrivacySanitizer
-from reporter import send_embeds, send_trend_report, summary_embeds
+from reporter import chat_embeds, send_embeds, send_trend_report, summary_embeds
 from summary import SummaryService
 from trends import TrendService
 
@@ -42,6 +43,7 @@ class SummaryBot(commands.Bot):
             settings.include_bot_messages,
         )
         self.summary_service = SummaryService(llm, settings.min_task_confidence)
+        self.chat_service = ChatService(llm)
         self.trend_service = TrendService(
             llm,
             settings.min_topic_messages,
@@ -113,6 +115,34 @@ class SummaryBot(commands.Bot):
                 )
             await send_embeds(output, embeds)
             return collection
+
+    async def run_chat(
+        self,
+        guild: discord.Guild,
+        channels: list[discord.TextChannel],
+        start: datetime,
+        end: datetime,
+        user_input: str,
+    ) -> tuple[PrioritizedCollection, list[discord.Embed]]:
+        async with self._lock(guild.id):
+            collection = await self.collector.collect_channels_atomic(
+                channels, start, end
+            )
+            raw = collection.messages
+            if not raw:
+                return collection, []
+
+            safe = PrivacySanitizer().sanitize(raw)
+            sources = _report_sources(guild.id, raw, safe)
+            result = await self.chat_service.answer(safe, user_input)
+            hours = max(1, round((end - start).total_seconds() / 3600))
+            embeds = chat_embeds(
+                result,
+                len(collection.included),
+                hours=hours,
+                sources=sources,
+            )
+            return collection, embeds
 
     async def run_trends(
         self,
@@ -466,6 +496,75 @@ async def summary_command(
         message = "Không có tin nhắn phù hợp trong khoảng thời gian này."
     if run.skipped:
         message += "\n" + _skipped_channels_notice(run.skipped)
+    await interaction.followup.send(
+        message,
+        ephemeral=True,
+        allowed_mentions=discord.AllowedMentions.none(),
+    )
+
+
+@bot.tree.command(
+    name="chat",
+    description="Hỏi hoặc tùy biến kết quả bằng ngôn ngữ tự nhiên",
+)
+@app_commands.describe(
+    input="Ví dụ: Chỉ liệt kê deadline dưới dạng checklist",
+    channel="Kênh ưu tiên 1; bỏ trống để dùng mọi kênh nguồn",
+    channel_2="Kênh ưu tiên 2",
+    channel_3="Kênh ưu tiên 3",
+    channel_4="Kênh ưu tiên 4",
+    channel_5="Kênh ưu tiên 5",
+    channel_6="Kênh ưu tiên 6",
+    hours="Số giờ cần đọc",
+)
+@app_commands.checks.cooldown(1, 30, key=lambda item: (item.guild_id, item.user.id))
+async def chat_command(
+    interaction: discord.Interaction,
+    input: app_commands.Range[str, 1, 1000],
+    channel: discord.TextChannel | None = None,
+    channel_2: discord.TextChannel | None = None,
+    channel_3: discord.TextChannel | None = None,
+    channel_4: discord.TextChannel | None = None,
+    channel_5: discord.TextChannel | None = None,
+    channel_6: discord.TextChannel | None = None,
+    hours: app_commands.Range[int, 1, 168] = settings.summary_default_hours,
+) -> None:
+    guild = _guild(interaction)
+    channels = _unique_channels(
+        [channel, channel_2, channel_3, channel_4, channel_5, channel_6]
+    )
+    if not channels:
+        channels = _text_channels(guild, await bot.db.get_sources(guild.id))
+    if not channels:
+        raise app_commands.CheckFailure(
+            "Chưa có kênh nguồn. Hãy chọn channel hoặc nhờ quản trị viên dùng /add-source."
+        )
+    for selected_channel in channels:
+        await _check_source(interaction, selected_channel)
+
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    end = datetime.now(UTC)
+    run, embeds = await bot.run_chat(
+        guild,
+        channels,
+        end - timedelta(hours=int(hours)),
+        end,
+        str(input),
+    )
+
+    notice = _skipped_channels_notice(run.skipped) if run.skipped else None
+    if embeds:
+        await interaction.followup.send(
+            content=notice,
+            embeds=embeds,
+            ephemeral=True,
+            allowed_mentions=discord.AllowedMentions.none(),
+        )
+        return
+
+    message = "Không có tin nhắn phù hợp trong khoảng thời gian này."
+    if notice:
+        message += "\n" + notice
     await interaction.followup.send(
         message,
         ephemeral=True,

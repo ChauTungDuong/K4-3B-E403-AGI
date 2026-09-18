@@ -20,15 +20,18 @@ discord-gemini-bot/
 ├── privacy.py                # Ẩn danh và loại thông tin cá nhân
 ├── gemini.py                 # Gọi Gemini và parse structured output
 ├── summary.py                # MODULE 1: tóm tắt và tạo danh sách công việc
+├── chat.py                   # Yêu cầu tự nhiên có grounding và giới hạn phạm vi
 ├── trends.py                 # MODULE 2: phân tích xu hướng của một kênh
 ├── reporter.py               # Chuyển kết quả thành Discord embeds an toàn
 │
 ├── prompts/
 │   ├── summary.txt           # Chỉ dẫn trích xuất summary/task
+│   ├── chat.txt              # Trả lời yêu cầu tự nhiên có evidence
 │   └── trends.txt            # Chỉ dẫn đặt tên và giải thích trend
 │
 ├── tests/
 │   ├── test_summary.py       # Task, priority, deduplicate và evidence
+│   ├── test_chat.py          # Natural-language request, grounding và refusal
 │   ├── test_trends.py        # Hot/new, baseline, spam và toxic
 │   ├── test_privacy.py       # Email, phone, mention, ID và secret
 │   └── fixtures.json         # Các đoạn chat mẫu đã được ẩn danh
@@ -39,7 +42,8 @@ discord-gemini-bot/
 └── PROJECT_STRUCTURE.md
 ```
 
-Cấu trúc này có 10 file Python phục vụ runtime và chỉ có đúng hai file nghiệp vụ chính: `summary.py` và `trends.py`.
+Cấu trúc runtime giữ các nghiệp vụ chính trong `summary.py`, `chat.py` và
+`trends.py`; phần Discord orchestration vẫn nằm tại `bot.py`.
 
 ## 2. Vai trò và giới hạn của từng file
 
@@ -270,17 +274,28 @@ class TopicTrend(BaseModel):
     evidence_refs: list[str]
 ```
 
-## 5. Luồng hai lệnh chính
+## 5. Luồng các lệnh chính
 
-### `/summary channel hours`
+### `/summary channel ... channel_6 hours`
 
 ```text
 bot.py
-  → collector.collect(channel, hours)
-  → privacy.sanitize(messages)
-  → summary.analyze(safe_messages)
+  → collector.collect_channels_atomic(channels, hours)
+  → privacy.sanitize(messages của các kênh đầy đủ)
+  → summary.analyze(safe_messages) theo từng kênh
   → privacy.check_output(result)
-  → reporter.send_summary(result)
+  → reporter.send_summary(từng phần)
+```
+
+### `/chat input channel ... channel_6 hours`
+
+```text
+bot.py
+  → collector.collect_channels_atomic(channels, hours)
+  → privacy.sanitize(messages) + che PII trong input
+  → chat.answer(input, safe_messages)
+  → kiểm tra evidence_refs + privacy.check_output(result)
+  → trả embed có jump link dưới dạng ephemeral
 ```
 
 ### `/trends channel current_hours baseline_days`

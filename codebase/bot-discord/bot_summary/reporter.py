@@ -4,7 +4,7 @@ from typing import TypeAlias
 
 import discord
 
-from models import SummaryResult, TaskItem, TopicTrend, TrendResult
+from models import ChatResult, SummaryResult, TaskItem, TopicTrend, TrendResult
 from privacy import ensure_safe_output
 
 
@@ -202,6 +202,41 @@ def summary_embeds(
         ]
     )
     embed.description = "\n".join(lines)
+    return [embed]
+
+
+def chat_embeds(
+    result: ChatResult,
+    channel_count: int,
+    *,
+    hours: int = 24,
+    sources: SourceMap | None = None,
+) -> list[discord.Embed]:
+    """Dựng câu trả lời tùy biến; link nguồn chỉ được nối sau output guard."""
+    ensure_safe_output(result.model_dump_json())
+    embed = discord.Embed(
+        title=_cut(
+            f"💬 Trả lời theo yêu cầu · {channel_count} kênh · "
+            f"{_window_text(hours)}",
+            256,
+        ),
+        description=_cut(result.overview, 1200),
+        color=(
+            discord.Color.blurple()
+            if result.status == "answered"
+            else discord.Color.orange()
+            if result.status == "not_found"
+            else discord.Color.red()
+        ),
+    )
+    for section in result.sections[:5]:
+        sources_text = _evidence_text(section.evidence_refs, sources)
+        embed.add_field(
+            name=_cut(section.heading, 256),
+            value=_cut(f"{section.content}\n🔎 Nguồn: {sources_text}", 1024),
+            inline=False,
+        )
+    embed.set_footer(text=f"Đã kiểm tra {result.analyzed_messages} tin nhắn")
     return [embed]
 
 

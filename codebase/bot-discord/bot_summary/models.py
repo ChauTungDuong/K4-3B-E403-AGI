@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 Priority = Literal["P0", "P1", "P2", "P3"]
 Sentiment = Literal["positive", "neutral", "negative", "mixed"]
+ChatStatus = Literal["answered", "not_found", "refused"]
 
 
 class Message(BaseModel):
@@ -91,6 +92,25 @@ class SummaryResult(BaseModel):
     tasks: list[TaskItem] = Field(default_factory=list)
     decisions: list[EvidenceItem] = Field(default_factory=list)
     open_questions: list[EvidenceItem] = Field(default_factory=list)
+    analyzed_messages: int = 0
+
+
+class ChatSection(BaseModel):
+    heading: str
+    content: str
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
+class ChatDraft(BaseModel):
+    status: ChatStatus
+    overview: str
+    sections: list[ChatSection] = Field(default_factory=list)
+
+
+class ChatResult(BaseModel):
+    status: ChatStatus
+    overview: str
+    sections: list[ChatSection] = Field(default_factory=list)
     analyzed_messages: int = 0
 
 

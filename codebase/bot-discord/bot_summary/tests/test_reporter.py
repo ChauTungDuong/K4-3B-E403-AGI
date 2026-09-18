@@ -1,6 +1,8 @@
 import unittest
 
 from models import (
+    ChatResult,
+    ChatSection,
     EvidenceItem,
     SummaryResult,
     TaskItem,
@@ -8,7 +10,7 @@ from models import (
     ToxicityResult,
     TrendResult,
 )
-from reporter import TrendDetailsView, summary_embeds, trend_embeds
+from reporter import TrendDetailsView, chat_embeds, summary_embeds, trend_embeds
 
 
 class SummaryReporterTests(unittest.TestCase):
@@ -76,6 +78,36 @@ class SummaryReporterTests(unittest.TestCase):
         self.assertIn("Không tìm thấy việc cần chú ý mới", embed.description)
         self.assertLessEqual(1 + len(embed.description.splitlines()), 8)
 
+
+class ChatReporterTests(unittest.TestCase):
+    def test_chat_answer_has_grounded_source_links(self) -> None:
+        result = ChatResult(
+            status="answered",
+            overview="Các deadline cần chú ý.",
+            sections=[
+                ChatSection(
+                    heading="Checklist",
+                    content="Nộp lab trước 23:59 hôm nay.",
+                    evidence_refs=["MSG_001"],
+                )
+            ],
+            analyzed_messages=12,
+        )
+        sources = {
+            "MSG_001": (
+                111111111111111111,
+                222222222222222222,
+                333333333333333333,
+            )
+        }
+
+        embed = chat_embeds(result, 2, hours=24, sources=sources)[0]
+
+        self.assertIn("2 kênh", embed.title)
+        self.assertEqual(embed.fields[0].name, "Checklist")
+        self.assertIn("Nguồn 1", embed.fields[0].value)
+        self.assertIn("discord.com/channels", embed.fields[0].value)
+        self.assertEqual(embed.footer.text, "Đã kiểm tra 12 tin nhắn")
 
 class TrendReporterTests(unittest.TestCase):
     def test_topic_uses_natural_vietnamese_and_highlighted_metrics(self) -> None:
