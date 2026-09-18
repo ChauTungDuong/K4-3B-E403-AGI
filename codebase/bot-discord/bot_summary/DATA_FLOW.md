@@ -21,7 +21,7 @@ flowchart TD
     TR["TrendResult"]
     DB[("SQLite<br/>Chỉ lưu TrendResult đã ẩn danh<br/>+ guild/channel metadata")]
     OG["Output Guard<br/>Quét PII lần cuối"]
-    OUT["Discord<br/>Tổng quan công khai + nút chi tiết<br/>Chi tiết ephemeral cho người bấm"]
+    OUT["Discord<br/>Bản tin ngắn theo format chuẩn<br/>Trend có chi tiết ephemeral sau nút bấm"]
     BLOCK["Chặn gửi<br/>nếu còn dấu hiệu PII"]
 
     A --> B
@@ -88,7 +88,7 @@ SAU — SafeMessage, được phép gửi Gemini
 }
 ```
 
-Bảng ánh xạ giữa ID thật và `USER_xx`/`MSG_xxx` chỉ tồn tại trong bộ nhớ của lần chạy. Nó không được gửi sang Gemini và không được lưu vào SQLite.
+Bảng ánh xạ giữa ID thật và `USER_xx`/`MSG_xxx` chỉ tồn tại trong bộ nhớ của lần chạy. Nó không được gửi sang Gemini và không được lưu vào SQLite. Sau khi kết quả đã qua kiểm chứng, renderer dùng ánh xạ RAM này để tạo channel mention và jump link Discord cho bằng chứng; Gemini vẫn chỉ thấy alias.
 
 ## 3. Luồng `/summary`
 
@@ -228,11 +228,11 @@ flowchart LR
 
 | Loại dữ liệu | Gửi Gemini | Lưu SQLite | Trả về Discord |
 |---|---:|---:|---:|
-| Raw message có ID/tên thật | Không | Không | Không |
+| Raw message có ID/tên thật | Không | Không | Không trực tiếp; chỉ channel mention/jump link tin gốc được dựng cục bộ |
 | SafeMessage đã ẩn danh | Có | Không | Không trực tiếp |
 | SummaryResult | Không gửi lại | Không | Có |
 | TrendResult | Không gửi lại | Có | Có |
-| Guild ID và channel ID cấu hình | Không | Có | Không hiển thị trong report |
+| Guild ID và channel ID cấu hình | Không | Có | Chỉ xuất hiện trong channel mention/jump link Discord |
 | Bảng ánh xạ ID thật → alias | Không | Không | Không |
 
 ## 6. Những nội dung hiện chưa đi qua pipeline

@@ -1,16 +1,208 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from typing import TypeAlias
 
 import discord
 
-from models import SummaryResult, TrendResult
+from models import SummaryResult, TaskItem, TopicTrend, TrendResult
 from privacy import ensure_safe_output
+
+
+# guild_id, channel_id, message_id. Bảng này chỉ tồn tại trong RAM và
+# không được gửi sang Gemini hay lưu vào snapshot.
+SourceMap: TypeAlias = dict[str, tuple[int, int, int]]
 
 
 def _cut(text: str, limit: int) -> str:
     text = text.strip()
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def _one_line(text: str, limit: int) -> str:
+    return _cut(" ".join(text.split()), limit)
+
+
+def _action(text: str, max_words: int = 12) -> str:
+    words = text.split()
+    if len(words) <= max_words:
+        return " ".join(words)
+    return " ".join(words[:max_words]).rstrip(".,;:") + "…"
+
+
+def _window_text(hours: int) -> str:
+    return f"{max(1, hours)} giờ qua"
+
+
+def _source_suffix(
+    refs: list[str],
+    sources: SourceMap | None,
+    link_label: str,
+) -> str:
+    if not refs:
+        return ""
+    ref = refs[0]
+    source = sources.get(ref) if sources else None
+    if source is None:
+        return f" • Nguồn: `{ref}`"
+    guild_id, channel_id, message_id = source
+    url = f"https://discord.com/channels/{guild_id}/{channel_id}/{message_id}"
+    return f" • <#{channel_id}> • [{link_label}]({url})"
+
+
+def _evidence_text(refs: list[str], sources: SourceMap | None) -> str:
+    values: list[str] = []
+    for index, ref in enumerate(refs[:5], 1):
+        source = sources.get(ref) if sources else None
+        if source is None:
+            values.append(f"`{ref}`")
+            continue
+        guild_id, channel_id, message_id = source
+        url = f"https://discord.com/channels/{guild_id}/{channel_id}/{message_id}"
+        values.append(f"[Nguồn {index} ↗]({url})")
+    return ", ".join(values) or "Không có"
+
+
+def _summary_task_line(
+    item: TaskItem,
+    sources: SourceMap | None,
+) -> str:
+    confirmation = " · ⚠️ Cần xác nhận" if item.status == "needs_confirmation" else ""
+    if item.priority in {"P0", "P1"}:
+        qualifier = confirmation
+        if not qualifier and item.deadline:
+            deadline = _one_line(item.deadline, 40)
+            if deadline.casefold().startswith(("trước ", "còn ")):
+                qualifier = f" · {deadline[0].upper()}{deadline[1:]}"
+            else:
+                qualifier = f" · Trước {deadline}"
+        prefix = f"🔴 **CẦN LÀM NGAY{qualifier}:**"
+    elif item.priority == "P2":
+        prefix = f"🟡 **CẦN BIẾT{confirmation}:**"
+    else:
+        prefix = f"🟢 **ĐỌC THÊM{confirmation}:**"
+    return (
+        f"{prefix} {_action(item.title)}"
+        f"{_source_suffix(item.evidence_refs, sources, 'Xem tin gốc ↗')}"
+    )
+
+
+def _summary_more_line(
+    result: SummaryResult,
+    displayed_tasks: set[int],
+    used_decision: bool,
+    sources: SourceMap | None,
+) -> str:
+    parts: list[str] = []
+    refs: list[str] = []
+
+    for index, item in enumerate(result.tasks):
+        if index not in displayed_tasks:
+            parts.append(_action(item.title, 8))
+            refs.extend(item.evidence_refs)
+    for index, item in enumerate(result.decisions):
+        if index == 0 and used_decision:
+            continue
+        parts.append(_one_line(item.text, 100))
+        refs.extend(item.evidence_refs)
+    for item in result.open_questions:
+        parts.append(f"Cần làm rõ: {_one_line(item.text, 90)}")
+        refs.extend(item.evidence_refs)
+
+    if parts:
+        text = "; ".join(parts[:3])
+        if len(parts) > 3:
+            text += f"; và {len(parts) - 3} nội dung khác"
+    else:
+        text = _one_line(result.executive_summary, 220)
+        if not text:
+            text = "Không có thảo luận ngoài lề quan trọng."
+
+    return (
+        f"🟢 **ĐỌC THÊM:** {_cut(text, 260)}"
+        f"{_source_suffix(list(dict.fromkeys(refs)), sources, 'Xem tin gốc ↗')}"
+    )
+
+
+def summary_embeds(
+    result: SummaryResult,
+    title: str,
+    *,
+    hours: int = 24,
+    sources: SourceMap | None = None,
+) -> list[discord.Embed]:
+    """Dựng một digest tối đa 8 dòng theo khung hiển thị chuẩn."""
+    ensure_safe_output(result.model_dump_json())
+    attention_count = len(result.tasks) + len(result.decisions) + len(
+        result.open_questions
+    )
+    suffix = f" · {attention_count} việc cần chú ý" if attention_count else ""
+    embed = discord.Embed(
+        title=_cut(
+            f"📋 Tóm tắt thông báo — {title} - {_window_text(hours)}{suffix}",
+            256,
+        ),
+        color=discord.Color.blurple(),
+    )
+
+    if not attention_count:
+        summary = _one_line(result.executive_summary, 500)
+        lines = [
+            "Chi tiết:",
+            f"🟢 **Không tìm thấy việc cần chú ý mới trong {_window_text(hours)}.**",
+        ]
+        if summary:
+            lines.append(summary)
+        lines.extend(
+            [
+                "",
+                "[🔍 Quét 48h qua] • [📢 Kiểm tra kênh thông báo]",
+            ]
+        )
+        embed.description = "\n".join(lines)
+        return [embed]
+
+    detail_lines: list[str] = []
+    displayed_tasks: set[int] = set()
+    used_decision = False
+
+    urgent_indexes = [
+        index
+        for index, item in enumerate(result.tasks)
+        if item.priority in {"P0", "P1"}
+    ]
+    known_indexes = [
+        index for index, item in enumerate(result.tasks) if item.priority == "P2"
+    ]
+    for index in urgent_indexes[:2]:
+        detail_lines.append(_summary_task_line(result.tasks[index], sources))
+        displayed_tasks.add(index)
+
+    if len(detail_lines) < 3 and known_indexes:
+        index = known_indexes[0]
+        detail_lines.append(_summary_task_line(result.tasks[index], sources))
+        displayed_tasks.add(index)
+    elif len(detail_lines) < 3 and result.decisions:
+        decision = result.decisions[0]
+        detail_lines.append(
+            f"🟡 **CẦN BIẾT:** {_one_line(decision.text, 220)}"
+            f"{_source_suffix(decision.evidence_refs, sources, 'Xem tin gốc ↗')}"
+        )
+        used_decision = True
+
+    # Dòng ĐỌC THÊM luôn là dòng chi tiết cuối, gộp phần còn lại.
+    detail_lines.append(
+        _summary_more_line(result, displayed_tasks, used_decision, sources)
+    )
+    detail_lines = detail_lines[:4]
+    lines = ["Chi tiết:", *detail_lines]
+    lines.extend(
+        [
+            "",
+            "👍 👎 *Kết quả này có hữu ích?* • [🔄 Quét 12h] • [⚙️ Bộ lọc kênh]",
+        ]
+    )
+    embed.description = "\n".join(lines)
+    return [embed]
 
 
 def _classification_text(value: str) -> str:
@@ -28,7 +220,15 @@ def _score_text(score: float, *, novelty: bool = False) -> str:
     if novelty:
         label = "Rất mới" if score >= 0.8 else "Khá mới" if score >= 0.5 else "Đã quen thuộc"
     else:
-        label = "Rất cao" if score >= 0.8 else "Cao" if score >= 0.6 else "Trung bình" if score >= 0.4 else "Thấp"
+        label = (
+            "Rất cao"
+            if score >= 0.8
+            else "Cao"
+            if score >= 0.6
+            else "Trung bình"
+            if score >= 0.4
+            else "Thấp"
+        )
     return f"**{score:.0%}** — {label}"
 
 
@@ -67,76 +267,31 @@ def _topic_color(classification: str) -> discord.Color:
     }.get(classification, discord.Color.light_grey())
 
 
-def summary_embeds(result: SummaryResult, title: str) -> list[discord.Embed]:
-    ensure_safe_output(result.model_dump_json())
-    overview = discord.Embed(
-        title=f"📝 Tóm tắt · {title}",
-        description=_cut(result.executive_summary, 3500),
-        color=discord.Color.blurple(),
-        timestamp=datetime.now(UTC),
+def _trend_line(
+    item: TopicTrend,
+    index: int,
+    sources: SourceMap | None,
+) -> str:
+    if index == 0:
+        heading = f"CHỦ ĐỀ NÓNG NHẤT · {item.message_count} lượt trao đổi"
+    else:
+        heading = "ĐANG THẢO LUẬN NHIỀU"
+    explanation = _one_line(item.explanation, 180)
+    body = _one_line(item.topic, 100)
+    if explanation and explanation.casefold() != body.casefold():
+        body = f"{body} — {explanation}"
+    return (
+        f"🔥 **{heading}:** {_cut(body, 290)}"
+        f"{_source_suffix(item.evidence_refs, sources, 'Xem thảo luận ↗')}"
     )
-    overview.set_footer(text=f"Đã phân tích {result.analyzed_messages} tin nhắn")
-    embeds = [overview]
-
-    if result.tasks:
-        # Chia nhóm để không vượt giới hạn 6000 ký tự của một Discord embed.
-        for start in range(0, min(len(result.tasks), 16), 8):
-            tasks = discord.Embed(
-                title="✅ Danh sách công việc", color=discord.Color.green()
-            )
-            for item in result.tasks[start : start + 8]:
-                details = [item.reason, f"Trạng thái: **{item.status}**"]
-                if item.owner_ref:
-                    details.append(f"Owner: **{item.owner_ref}**")
-                if item.deadline:
-                    details.append(f"Deadline: **{item.deadline}**")
-                details.append(
-                    f"Tin cậy: **{item.confidence:.0%}** · "
-                    f"Nguồn: {', '.join(item.evidence_refs)}"
-                )
-                tasks.add_field(
-                    name=_cut(f"[{item.priority}] {item.title}", 180),
-                    value=_cut("\n".join(details), 480),
-                    inline=False,
-                )
-            embeds.append(tasks)
-
-    if result.decisions or result.open_questions:
-        context = discord.Embed(title="📌 Thông tin liên quan", color=discord.Color.teal())
-        if result.decisions:
-            value = "\n".join(
-                f"• {item.text} ({', '.join(item.evidence_refs)})"
-                for item in result.decisions[:5]
-            )
-            context.add_field(name="Quyết định", value=_cut(value, 1024), inline=False)
-        if result.open_questions:
-            value = "\n".join(
-                f"• {item.text} ({', '.join(item.evidence_refs)})"
-                for item in result.open_questions[:5]
-            )
-            context.add_field(name="Cần làm rõ", value=_cut(value, 1024), inline=False)
-        embeds.append(context)
-    return embeds
 
 
-def trend_embeds(result: TrendResult, title: str) -> list[discord.Embed]:
-    ensure_safe_output(result.model_dump_json())
-    overview = discord.Embed(
-        title=f"📈 Xu hướng · {title}",
-        description=_cut(f"{result.overview}\n\n_{result.data_quality}_", 3500),
-        color=discord.Color.orange(),
-        timestamp=datetime.now(UTC),
-    )
-    overview.set_footer(
-        text=(
-            f"Hiện tại: {result.current_message_count} tin · "
-            f"Baseline: {result.baseline_message_count} tin"
-        )
-    )
-    embeds = [overview]
-
+def _trend_detail_embeds(
+    result: TrendResult,
+    sources: SourceMap | None,
+) -> list[discord.Embed]:
+    embeds: list[discord.Embed] = []
     for item in result.topics[:8]:
-        # Mỗi trend có 2 phần rõ ràng: nội dung và khối số liệu nổi bật.
         topic = discord.Embed(
             title=f"📌 {_cut(item.topic, 240)}",
             description=_cut(item.explanation, 1600),
@@ -159,7 +314,7 @@ def trend_embeds(result: TrendResult, title: str) -> list[discord.Embed]:
                 "ℹ️ _Các điểm trên chỉ là tín hiệu ban đầu vì chưa đủ tin nhắn, "
                 "người tham gia hoặc dữ liệu lịch sử._"
             )
-        metrics.append(f"🔎 **Bằng chứng:** {', '.join(item.evidence_refs)}")
+        metrics.append(f"🔎 **Bằng chứng:** {_evidence_text(item.evidence_refs, sources)}")
         topic.add_field(
             name="📊 Số liệu nổi bật",
             value=_cut("\n".join(metrics), 1024),
@@ -178,13 +333,67 @@ def trend_embeds(result: TrendResult, title: str) -> list[discord.Embed]:
             name=f"Mức {toxic_level} · {result.toxicity.ratio:.0%} tin được gắn cờ",
             value=_cut(
                 f"{result.toxicity.summary}\nNguồn: "
-                f"{', '.join(result.toxicity.evidence_refs)}",
+                f"{_evidence_text(result.toxicity.evidence_refs, sources)}",
                 1024,
             ),
             inline=False,
         )
         embeds.append(toxic)
     return embeds
+
+
+def trend_embeds(
+    result: TrendResult,
+    title: str,
+    *,
+    hours: int = 24,
+    sources: SourceMap | None = None,
+) -> list[discord.Embed]:
+    """Dựng bản tin trend tối đa 10 dòng và giữ chi tiết sau nút bấm."""
+    ensure_safe_output(result.model_dump_json())
+    topic_count = len(result.topics)
+    topic_suffix = f" · {topic_count} chủ đề nổi bật" if topic_count else ""
+    overview = discord.Embed(
+        title=_cut(
+            f"📊 Phân tích xu hướng thảo luận — {title} - "
+            f"{_window_text(hours)}{topic_suffix}",
+            256,
+        ),
+        color=discord.Color.orange(),
+    )
+
+    if not result.topics:
+        overview.description = "\n".join(
+            [
+                "Chi tiết:",
+                f"🟢 **Chưa phát hiện xu hướng nổi bật trong {_window_text(hours)}.**",
+                f"• Đã phân tích {result.current_message_count} tin nhắn trong cửa sổ hiện tại.",
+                f"• {_one_line(result.data_quality, 500)}",
+                "",
+                "💡 *Gợi ý:* Tiếp tục theo dõi kênh và quét lại khi có thêm trao đổi.",
+                "",
+                "[🔄 Quét lại] • [📋 Xem Tóm tắt thông báo]",
+            ]
+        )
+        return [overview]
+
+    lines = ["Chi tiết:"]
+    lines.extend(
+        _trend_line(item, index, sources)
+        for index, item in enumerate(result.topics[:3])
+    )
+    lines.append(
+        f"💡 **LỐI TẮT XỬ LÝ:** Ưu tiên kiểm tra “"
+        f"{_one_line(result.topics[0].topic, 100)}”, sau đó theo dõi các chủ đề còn lại."
+    )
+    lines.extend(
+        [
+            "",
+            "👍 👎 *Bản tin này có hữu ích?* • [📌 Lọc theo kênh] • [🙋 Gửi câu hỏi cho TA]",
+        ]
+    )
+    overview.description = "\n".join(lines)
+    return [overview, *_trend_detail_embeds(result, sources)]
 
 
 class TrendDetailsView(discord.ui.View):
@@ -228,9 +437,12 @@ async def send_trend_report(
     channel: discord.TextChannel,
     result: TrendResult,
     title: str,
+    *,
+    hours: int = 24,
+    sources: SourceMap | None = None,
 ) -> None:
     """Gửi tổng quan công khai; chi tiết chỉ hiện sau khi bấm nút."""
-    embeds = trend_embeds(result, title)
+    embeds = trend_embeds(result, title, hours=hours, sources=sources)
     overview, details = embeds[0], embeds[1:]
     view = TrendDetailsView(details) if details else None
     message = await channel.send(

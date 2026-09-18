@@ -49,7 +49,7 @@ Thành viên có quyền đọc kênh nguồn có thể dùng:
 /trends channel:#backend current_hours:24 baseline_days:7
 ```
 
-Kết quả được gửi vào kênh output đã cấu hình. Trạng thái lệnh và lỗi chỉ hiện với người gọi.
+Kết quả được gửi vào kênh output đã cấu hình. Digest dùng khung 🔴/🟡/🟢 tối đa 8 dòng; bản tin trend dùng khung 🔥/💡 tối đa 10 dòng. Mỗi mục có channel mention và jump link tới tin gốc khi có bằng chứng hợp lệ. Trạng thái lệnh và lỗi chỉ hiện với người gọi.
 
 Báo cáo trend ban đầu chỉ hiển thị kết luận chung. Người dùng bấm `📊 Xem chi tiết` để mở topic và số liệu trong phản hồi riêng tư; nút hoạt động trong 60 phút sau khi báo cáo được gửi.
 

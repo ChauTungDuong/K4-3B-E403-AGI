@@ -13,7 +13,7 @@ from collector import DiscordCollector
 from config import settings
 from database import Database
 from gemini import GeminiClient
-from models import Message
+from models import Message, SafeMessage
 from privacy import PrivacySanitizer
 from reporter import send_embeds, send_trend_report, summary_embeds
 from summary import SummaryService
@@ -86,8 +86,13 @@ class SummaryBot(commands.Bot):
             if not raw:
                 return 0
             safe = PrivacySanitizer().sanitize(raw)
+            sources = _report_sources(guild.id, raw, safe)
             result = await self.summary_service.analyze(safe)
-            await send_embeds(output, summary_embeds(result, title))
+            hours = max(1, round((end - start).total_seconds() / 3600))
+            await send_embeds(
+                output,
+                summary_embeds(result, title, hours=hours, sources=sources),
+            )
             return len(raw)
 
     async def run_trends(
@@ -112,6 +117,9 @@ class SummaryBot(commands.Bot):
 
             # Sanitize cùng lúc để alias và MSG ref nhất quán giữa hai cửa sổ.
             safe = PrivacySanitizer().sanitize(baseline_raw + current_raw)
+            sources = _report_sources(
+                guild.id, baseline_raw + current_raw, safe
+            )
             baseline_safe = [item for item in safe if item.created_at < current_start]
             current_safe = [item for item in safe if item.created_at >= current_start]
             result = await self.trend_service.analyze(
@@ -123,7 +131,13 @@ class SummaryBot(commands.Bot):
             await self.db.save_trend_snapshot(
                 guild.id, channel.id, current_hours, baseline_days, result
             )
-            await send_trend_report(output, result, f"#{channel.name}")
+            await send_trend_report(
+                output,
+                result,
+                f"#{channel.name}",
+                hours=current_hours,
+                sources=sources,
+            )
             return len(current_safe)
 
     @tasks.loop(minutes=1)
@@ -172,6 +186,19 @@ class SummaryBot(commands.Bot):
 
 
 bot = SummaryBot()
+
+
+def _report_sources(
+    guild_id: int,
+    raw: list[Message],
+    safe: list[SafeMessage],
+) -> dict[str, tuple[int, int, int]]:
+    """Nối alias với jump link sau khi AI xử lý; không làm lộ ID cho model."""
+    ordered = sorted(raw, key=lambda item: item.created_at)
+    return {
+        safe_item.ref: (guild_id, raw_item.channel_id, raw_item.message_id)
+        for raw_item, safe_item in zip(ordered, safe, strict=True)
+    }
 
 
 def _fit_trend_input(
