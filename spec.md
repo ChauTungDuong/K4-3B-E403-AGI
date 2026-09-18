@@ -92,7 +92,7 @@ Loại: [x] Tối ưu tính năng có sẵn (Cải tiến bản tin bot) / Tính
 ## §7. Kiểm thử (Evals & Quality Bar)
 
 > **Mục tiêu:** Thiết lập khung đánh giá định lượng cho tính năng *Discord Priority Digest & Notification Summarizer* (Track B: Trợ lý Học viên Discord).  
-> **Bộ kiểm thử:** Golden Set 22 test case độc lập (`eval/golden_set.json`), trong đó **17/22 case (~77.3%)** được trích xuất và phát triển trực tiếp từ chatlog thực tế của Khóa 4 (gồm `k4_messages.csv` và dữ liệu vận hành lớp 3B tại phòng E403).  
+> **Bộ kiểm thử:** Golden Set 22 test case độc lập (`eval/golden_set.json`), trong đó **18/22 case (81.8%)** được trích xuất và phát triển trực tiếp từ chatlog thực tế của Khóa 4 (gồm `k4_messages.csv` và dữ liệu vận hành lớp 3B tại phòng E403).  
 > **Ngưỡng chất lượng (Quality Bar):** Đóng băng chính thức trước mốc CP4 (21:00 ngày 18/09/2026), giữ nguyên tiêu chuẩn nghiệm thu cho buổi Demo Day theo rubric R4.
 
 ### 7.1. Chiều Chất Lượng & Định Nghĩa Kiểm Chứng Được
@@ -116,7 +116,7 @@ Bộ test được xây dựng theo đúng scaffold cấu trúc chuẩn tại H�
 - **Nhóm Khó (Taxonomy 4 lớp rủi ro):** 8 cases (2 cases × 4 lớp) — `KB-01` $\to$ `KB-08`.
 - **Nhóm Thường (Thông báo lớp học & Q&A phổ biến):** 10 cases — `TH-01` $\to$ `TH-10`.
 - **Nhóm Hiếm (Edge Cases thực tế):** 4 cases — `CH-01` $\to$ `CH-04`.
-- **Thống kê nguồn:** **17/22 case (~77.3%)** từ chatlog thật của khóa học; **5/22 case (~22.7%)** mô phỏng red-team theo HAX Playbook.
+- **Thống kê nguồn:** **18/22 case (81.8%)** từ chatlog thật của khóa học; **4/22 case (18.2%)** mô phỏng red-team theo HAX Playbook.
 
 ### 7.3. Danh Mục Chi Tiết 22 Test Cases Đối Chiếu Kênh Thực Tế
 
@@ -230,7 +230,7 @@ Hệ thống không hỗ trợ giải bài tập hộ hoặc duyệt đơn xin n
   2. Hoàng Anh Minh (MSSV: 2A202602566)
   3. Hoàng Phong (MSSV: 2A202602943)
   4. Lê Trung Kiên (MSSV: 2A202602748)
-- Multi-prototype (nếu làm): trục khác biệt của ≥2 phương án + lý do chọn:
+- Multi-prototype (nếu làm): Không áp dụng (nhóm tập trung toàn lực vào hoàn thiện và kiểm thử Discord Bot tích hợp AI thật tại `codebase/bot-discord/bot_summary/`).
 
 ## §9. Changelog
 | Thời điểm | Đổi gì | Vì sao (trỏ về feedback/case nào) |
