@@ -133,6 +133,101 @@ class SummaryReporterTests(unittest.TestCase):
         self.assertNotIn("🟢 **ĐỌC THÊM:**", embed.description)
         self.assertLessEqual(1 + len(embed.description.splitlines()), 8)
 
+    def test_more_line_with_multiple_items_has_distinct_source_links(self) -> None:
+        result = SummaryResult(
+            executive_summary="Tổng hợp thông báo tuần.",
+            tasks=[
+                TaskItem(
+                    title="Nhiệm vụ P1 chính",
+                    priority="P1",
+                    status="open",
+                    reason="Hạn nộp",
+                    confidence=0.95,
+                    evidence_refs=["MSG_001"],
+                ),
+                TaskItem(
+                    title="Nhiệm vụ P2 chính",
+                    priority="P2",
+                    status="open",
+                    reason="Cần chú ý",
+                    confidence=0.9,
+                    evidence_refs=["MSG_002"],
+                ),
+                TaskItem(
+                    title="Nhiệm vụ phụ 3",
+                    priority="P3",
+                    status="open",
+                    reason="Đọc thêm",
+                    confidence=0.8,
+                    evidence_refs=["MSG_003"],
+                ),
+                TaskItem(
+                    title="Nhiệm vụ phụ 4",
+                    priority="P3",
+                    status="open",
+                    reason="Đọc thêm",
+                    confidence=0.8,
+                    evidence_refs=["MSG_004"],
+                ),
+            ],
+            decisions=[
+                EvidenceItem(
+                    text="Quyết định phụ 5", evidence_refs=["MSG_005"]
+                )
+            ],
+            analyzed_messages=5,
+        )
+        sources = {
+            "MSG_001": (111, 222, 1001),
+            "MSG_002": (111, 222, 1002),
+            "MSG_003": (111, 222, 1003),
+            "MSG_004": (111, 222, 1004),
+            "MSG_005": (111, 222, 1005),
+        }
+
+        embed = summary_embeds(result, "#thông-báo", hours=24, sources=sources)[0]
+        self.assertIn("🟢 **ĐỌC THÊM:** 1. Nhiệm vụ phụ 3; 2. Nhiệm vụ phụ 4; 3. Quyết định phụ 5", embed.description)
+        self.assertIn("<#222>", embed.description)
+        self.assertIn("[Tin 1 ↗](https://discord.com/channels/111/222/1003)", embed.description)
+        self.assertIn("[Tin 2 ↗](https://discord.com/channels/111/222/1004)", embed.description)
+        self.assertIn("[Tin 3 ↗](https://discord.com/channels/111/222/1005)", embed.description)
+        self.assertLessEqual(1 + len(embed.description.splitlines()), 8)
+
+    def test_more_line_with_multiple_channels_omits_single_channel_prefix(self) -> None:
+        result = SummaryResult(
+            executive_summary="Tổng hợp đa kênh.",
+            tasks=[
+                TaskItem(
+                    title="Task A",
+                    priority="P3",
+                    status="open",
+                    reason="Đọc thêm",
+                    confidence=0.8,
+                    evidence_refs=["MSG_001"],
+                ),
+                TaskItem(
+                    title="Task B",
+                    priority="P3",
+                    status="open",
+                    reason="Đọc thêm",
+                    confidence=0.8,
+                    evidence_refs=["MSG_002"],
+                ),
+            ],
+            analyzed_messages=2,
+        )
+        sources = {
+            "MSG_001": (111, 222, 1001),
+            "MSG_002": (111, 333, 1002),
+        }
+
+        embed = summary_embeds(result, "#tổng-hợp", hours=24, sources=sources)[0]
+        self.assertIn("[Tin 1 ↗](https://discord.com/channels/111/222/1001)", embed.description)
+        self.assertIn("[Tin 2 ↗](https://discord.com/channels/111/333/1002)", embed.description)
+        self.assertNotIn("<#222>", embed.description)
+        self.assertNotIn("<#333>", embed.description)
+        self.assertLessEqual(1 + len(embed.description.splitlines()), 8)
+
 
 class ChatReporterTests(unittest.TestCase):
     def test_chat_answer_has_grounded_source_links(self) -> None:

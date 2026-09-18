@@ -49,6 +49,50 @@ def _source_suffix(
     return f" • <#{channel_id}> • [{link_label}]({url})"
 
 
+def _multi_source_suffix(
+    items_refs: list[list[str]],
+    sources: SourceMap | None,
+) -> str:
+    if not items_refs:
+        return ""
+    if len(items_refs) == 1:
+        return _source_suffix(items_refs[0], sources, "Xem tin gốc ↗")
+
+    links: list[str] = []
+    channel_ids: list[int] = []
+    fallback_refs: list[str] = []
+
+    for index, refs in enumerate(items_refs, 1):
+        if not refs:
+            continue
+        ref = refs[0]
+        source = None
+        if sources:
+            for r in refs:
+                if r in sources:
+                    ref = r
+                    source = sources[r]
+                    break
+
+        if source is not None:
+            guild_id, channel_id, message_id = source
+            if channel_id not in channel_ids:
+                channel_ids.append(channel_id)
+            url = f"https://discord.com/channels/{guild_id}/{channel_id}/{message_id}"
+            links.append(f"[Tin {index} ↗]({url})")
+        elif ref:
+            fallback_refs.append(f"`{ref}`")
+
+    if links:
+        channel_prefix = (
+            f" • <#{channel_ids[0]}>" if len(channel_ids) == 1 else ""
+        )
+        return f"{channel_prefix} • " + " • ".join(links)
+    if fallback_refs:
+        return " • Nguồn: " + ", ".join(dict.fromkeys(fallback_refs))
+    return ""
+
+
 def _evidence_text(refs: list[str], sources: SourceMap | None) -> str:
     values: list[str] = []
     for index, ref in enumerate(refs[:5], 1):
@@ -100,42 +144,45 @@ def _summary_more_line(
     used_decision: bool,
     sources: SourceMap | None,
 ) -> str:
-    parts: list[str] = []
-    refs: list[str] = []
+    items: list[tuple[str, list[str]]] = []
     has_undisplayed_urgent = False
 
     for index, item in enumerate(result.tasks):
         if index not in displayed_tasks:
             if item.priority in {"P0", "P1"}:
                 has_undisplayed_urgent = True
-                parts.append(f"⚠️ {_action(item.title, 8)}")
+                items.append((f"⚠️ {_action(item.title, 8)}", item.evidence_refs))
             else:
-                parts.append(_action(item.title, 8))
-            refs.extend(item.evidence_refs)
+                items.append((_action(item.title, 8), item.evidence_refs))
     for index, item in enumerate(result.decisions):
         if index == 0 and used_decision:
             continue
-        parts.append(_one_line(item.text, 100))
-        refs.extend(item.evidence_refs)
+        items.append((_one_line(item.text, 100), item.evidence_refs))
     for item in result.open_questions:
-        parts.append(f"Cần làm rõ: {_one_line(item.text, 90)}")
-        refs.extend(item.evidence_refs)
+        items.append((f"Cần làm rõ: {_one_line(item.text, 90)}", item.evidence_refs))
 
-    if parts:
-        text = "; ".join(parts[:3])
-        if len(parts) > 3:
-            text += f"; và {len(parts) - 3} nội dung khác"
+    if items:
+        display_items = items[:3]
+        if len(display_items) == 1:
+            text = display_items[0][0]
+        else:
+            text = "; ".join(
+                f"{i}. {part}" for i, (part, _) in enumerate(display_items, 1)
+            )
+        if len(items) > 3:
+            text += f"; và {len(items) - 3} nội dung khác"
+        suffix = _multi_source_suffix(
+            [item_refs for _, item_refs in display_items], sources
+        )
     else:
         text = _one_line(result.executive_summary, 220)
         if not text:
             text = "Không có thảo luận ngoài lề quan trọng."
+        suffix = ""
 
     prefix = "🔴 **CẦN LÀM NGAY (KHÁC):**" if has_undisplayed_urgent else "🟢 **ĐỌC THÊM:**"
 
-    return (
-        f"{prefix} {_cut(text, 260)}"
-        f"{_source_suffix(list(dict.fromkeys(refs)), sources, 'Xem tin gốc ↗')}"
-    )
+    return f"{prefix} {_cut(text, 260)}{suffix}"
 
 
 def summary_embeds(
