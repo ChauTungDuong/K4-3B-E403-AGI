@@ -53,8 +53,17 @@ _NEGATION_WORDS = {
     "khi rảnh",
 }
 _TIME_PATTERN = re.compile(
-    r"\b(?:hôm nay|ngày mai|tuần này|today|tomorrow|this week|thứ [2-7]|"
-    r"chủ nhật|deadline|\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|\d{4}-\d{2}-\d{2})\b",
+    r"\b(?:"
+    r"hôm nay|ngày mai|chiều nay|sáng nay|tối nay|trưa nay|đêm nay|"
+    r"chiều mai|sáng mai|tối mai|trưa mai|đêm mai|tuần này|hôm qua|"
+    r"today|tomorrow|tonight|this week|"
+    r"thứ [2-7]|thứ (?:hai|ba|tư|năm|sáu|bảy)|chủ nhật|"
+    r"deadline|hạn chót|hạn nộp|hạn cuối|"
+    r"\d{1,2}[:h]\d{2}(?::\d{2})?|"
+    r"\d{1,2}\s*(?:h|giờ)(?:\s*\d{1,2}(?:\s*(?:p|phút))?)?|"
+    r"\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|"
+    r"\d{4}-\d{2}-\d{2}"
+    r")\b",
     re.I,
 )
 _PRIORITY_ORDER: dict[Priority, int] = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
@@ -122,11 +131,28 @@ class SummaryService:
 
         # Prompt phải giữ nguyên cụm deadline; giá trị không có trong nguồn bị coi là suy đoán.
         deadline = candidate.deadline
-        if (
-            not deadline
-            or not _TIME_PATTERN.search(evidence)
-            or deadline.casefold() not in evidence.casefold()
-        ):
+        if deadline:
+            dl_clean = deadline.strip()
+            if dl_clean.casefold() in evidence.casefold():
+                if not _TIME_PATTERN.search(evidence):
+                    deadline = None
+                else:
+                    deadline = dl_clean
+            else:
+                dl_tokens = [
+                    w
+                    for w in re.split(r"\s+", dl_clean.casefold())
+                    if w and w not in {"trước", "vào", "lúc", "tới", "hạn", "đến"}
+                ]
+                if (
+                    dl_tokens
+                    and all(token in evidence.casefold() for token in dl_tokens)
+                    and _TIME_PATTERN.search(evidence)
+                ):
+                    deadline = dl_clean
+                else:
+                    deadline = None
+        else:
             deadline = None
         status = candidate.status
         if candidate.confidence < self.min_confidence:

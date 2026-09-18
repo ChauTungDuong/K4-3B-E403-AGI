@@ -183,6 +183,76 @@ class SummaryPipelineTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result.tasks), 1)
         self.assertEqual(result.tasks[0].evidence_refs, ["MSG_030"])
 
+    async def test_hours_and_relative_day_deadlines_are_preserved(self) -> None:
+        draft = SummaryDraft(
+            executive_summary="Có việc cần làm đúng giờ.",
+            tasks=[
+                TaskCandidate(
+                    title="Cập nhật slide pitching",
+                    priority="P1",
+                    status="open",
+                    deadline="trước 17:00 chiều mai",
+                    reason="Hạn nộp BTC",
+                    confidence=0.95,
+                    evidence_refs=["MSG_001"],
+                ),
+                TaskCandidate(
+                    title="Đề cử chấm điểm zone",
+                    priority="P1",
+                    status="open",
+                    deadline="Trước 11h",
+                    reason="Chấm điểm",
+                    confidence=0.9,
+                    evidence_refs=["MSG_002"],
+                ),
+                TaskCandidate(
+                    title="Tham gia Mini Hackathon",
+                    priority="P1",
+                    status="open",
+                    deadline="17:30",
+                    reason="Sự kiện phòng E403",
+                    confidence=0.9,
+                    evidence_refs=["MSG_003"],
+                ),
+            ],
+        )
+
+        class FakeLLM:
+            async def generate(self, prompt, schema):
+                return draft
+
+        service = SummaryService(FakeLLM())
+        result = await service.analyze(
+            [
+                SafeMessage(
+                    ref="MSG_001",
+                    channel_ref="CHANNEL_01",
+                    author_ref="USER_01",
+                    created_at=datetime.now(UTC),
+                    content="nhớ cập nhật slide pitching của nhóm trước 17:00 chiều mai để kịp nộp BTC nhé",
+                ),
+                SafeMessage(
+                    ref="MSG_002",
+                    channel_ref="CHANNEL_01",
+                    author_ref="USER_01",
+                    created_at=datetime.now(UTC),
+                    content="Trước 11h: các nhóm cần đề cử 01 thành viên",
+                ),
+                SafeMessage(
+                    ref="MSG_003",
+                    channel_ref="CHANNEL_01",
+                    author_ref="USER_01",
+                    created_at=datetime.now(UTC),
+                    content="chiều nay có chương trình Mini Hackathon AI, bắt đầu vào 17:30",
+                ),
+            ]
+        )
+
+        self.assertEqual(len(result.tasks), 3)
+        self.assertEqual(result.tasks[0].deadline, "trước 17:00 chiều mai")
+        self.assertEqual(result.tasks[1].deadline, "Trước 11h")
+        self.assertEqual(result.tasks[2].deadline, "17:30")
+
 
 if __name__ == "__main__":
     unittest.main()
