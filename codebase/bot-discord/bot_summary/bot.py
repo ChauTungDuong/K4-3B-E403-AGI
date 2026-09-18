@@ -81,6 +81,7 @@ class SummaryBot(commands.Bot):
         channels: list[discord.TextChannel],
         start: datetime,
         end: datetime,
+        requester_id: int | None = None,
     ) -> PrioritizedCollection:
         async with self._lock(guild.id):
             collection = await self.collector.collect_channels_atomic(
@@ -89,7 +90,7 @@ class SummaryBot(commands.Bot):
             raw = collection.messages
             if not raw:
                 return collection
-            safe = PrivacySanitizer().sanitize(raw)
+            safe = PrivacySanitizer(requester_id=requester_id).sanitize(raw)
             sources = _report_sources(guild.id, raw, safe)
             safe_by_channel: dict[int, list[SafeMessage]] = {
                 item.channel_id: [] for item in collection.included
@@ -484,6 +485,7 @@ async def summary_command(
         channels,
         end - timedelta(hours=int(hours)),
         end,
+        requester_id=interaction.user.id,
     )
     if run.message_count:
         message = (

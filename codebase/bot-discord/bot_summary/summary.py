@@ -108,7 +108,12 @@ class SummaryService:
         evidence = " ".join(by_ref[ref].content for ref in refs)
         authors = {by_ref[ref].author_ref for ref in refs}
         owner = candidate.owner_ref
-        if owner and owner not in authors and owner not in evidence:
+        if (
+            owner
+            and owner not in authors
+            and owner not in evidence
+            and owner not in {"Learner", "USER_YOU"}
+        ):
             owner = None
 
         # Prompt phải giữ nguyên cụm deadline; giá trị không có trong nguồn bị coi là suy đoán.

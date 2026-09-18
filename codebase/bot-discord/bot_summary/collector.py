@@ -336,6 +336,13 @@ class DiscordCollector:
     @staticmethod
     def _to_model(item: discord.Message, parent: discord.TextChannel) -> Message:
         reply_to = item.reference.message_id if item.reference else None
+        content = item.content.strip()[:2000]
+        for role in getattr(item, "role_mentions", []):
+            role_name = getattr(role, "name", "").lower()
+            if any(name in role_name for name in ["learner", "học viên", "student"]):
+                content = content.replace(f"<@&{role.id}>", "@Learner")
+            elif getattr(role, "is_default", lambda: False)() or role_name in {"everyone", "here"}:
+                content = content.replace(f"<@&{role.id}>", f"@{role_name}")
         return Message(
             message_id=item.id,
             channel_id=parent.id,
@@ -343,7 +350,7 @@ class DiscordCollector:
             author_id=item.author.id,
             author_name=item.author.display_name,
             created_at=item.created_at,
-            content=item.content.strip()[:2000],
+            content=content,
             reaction_count=sum(reaction.count for reaction in item.reactions),
             reply_to_id=reply_to,
         )

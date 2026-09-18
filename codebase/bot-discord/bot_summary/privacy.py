@@ -55,11 +55,18 @@ def ensure_safe_output(text: str) -> None:
 class PrivacySanitizer:
     """Tạo bí danh mới cho từng lần phân tích; không lưu bảng ánh xạ."""
 
-    def __init__(self) -> None:
+    def __init__(self, requester_id: int | None = None) -> None:
+        self.requester_id = requester_id
         self.user_aliases: dict[int, str] = {}
+        if requester_id is not None:
+            self.user_aliases[requester_id] = "USER_YOU"
         self.channel_aliases: dict[int, str] = {}
 
-    def sanitize(self, messages: list[Message]) -> list[SafeMessage]:
+    def sanitize(
+        self, messages: list[Message], requester_id: int | None = None
+    ) -> list[SafeMessage]:
+        if requester_id is not None and requester_id not in self.user_aliases:
+            self.user_aliases[requester_id] = "USER_YOU"
         ordered = sorted(messages, key=lambda item: item.created_at)
         message_refs = {
             item.message_id: f"MSG_{index:03d}" for index, item in enumerate(ordered, 1)

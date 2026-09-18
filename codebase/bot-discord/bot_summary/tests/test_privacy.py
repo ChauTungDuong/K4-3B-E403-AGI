@@ -33,6 +33,23 @@ class PrivacyTests(unittest.TestCase):
         self.assertNotIn("abc123", safe.content)
         self.assertIn("USER_02", safe.content)
 
+    def test_requester_id_mapped_to_user_you(self) -> None:
+        messages = [
+            Message(
+                message_id=1,
+                channel_id=10,
+                channel_name="lop-hoc",
+                author_id=999,
+                author_name="Bob Tran",
+                created_at=datetime.now(UTC),
+                content="Chào <@555>, bạn nhớ nộp bài nhé",
+            )
+        ]
+
+        safe = PrivacySanitizer(requester_id=555).sanitize(messages)[0]
+        self.assertEqual(safe.author_ref, "USER_02")
+        self.assertIn("USER_YOU", safe.content)
+
     def test_output_guard_blocks_pii(self) -> None:
         with self.assertRaises(PrivacyError):
             ensure_safe_output("Liên hệ user@example.com")

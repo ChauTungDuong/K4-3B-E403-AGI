@@ -95,6 +95,59 @@ class SummaryPipelineTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(result.tasks[0].owner_ref)
         self.assertIsNone(result.tasks[0].deadline)
 
+    async def test_learner_and_user_you_owners_are_preserved(self) -> None:
+        draft = SummaryDraft(
+            executive_summary="Có hai việc cần làm.",
+            tasks=[
+                TaskCandidate(
+                    title="Nộp checkpoint đúng lớp",
+                    priority="P1",
+                    status="open",
+                    owner_ref="Learner",
+                    reason="Yêu cầu cho học viên",
+                    confidence=0.95,
+                    evidence_refs=["MSG_001"],
+                ),
+                TaskCandidate(
+                    title="Cập nhật thông tin nhóm",
+                    priority="P1",
+                    status="open",
+                    owner_ref="USER_YOU",
+                    reason="Yêu cầu riêng",
+                    confidence=0.95,
+                    evidence_refs=["MSG_002"],
+                ),
+            ],
+        )
+
+        class FakeLLM:
+            async def generate(self, prompt, schema):
+                return draft
+
+        service = SummaryService(FakeLLM(), min_confidence=0.75)
+        result = await service.analyze(
+            [
+                SafeMessage(
+                    ref="MSG_001",
+                    channel_ref="CHANNEL_01",
+                    author_ref="USER_01",
+                    created_at=datetime.now(UTC),
+                    content="Lưu ý @Learner nộp bài đúng hạn",
+                ),
+                SafeMessage(
+                    ref="MSG_002",
+                    channel_ref="CHANNEL_01",
+                    author_ref="USER_01",
+                    created_at=datetime.now(UTC),
+                    content="USER_YOU cập nhật thông tin nhóm nhé",
+                ),
+            ]
+        )
+
+        self.assertEqual(len(result.tasks), 2)
+        self.assertEqual(result.tasks[0].owner_ref, "Learner")
+        self.assertEqual(result.tasks[1].owner_ref, "USER_YOU")
+
 
 if __name__ == "__main__":
     unittest.main()

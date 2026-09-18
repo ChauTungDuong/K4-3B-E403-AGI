@@ -4,7 +4,11 @@ Yêu cầu:
 - Viết tiếng Việt ngắn gọn và chỉ dựa trên DỮ LIỆU.
 - Chỉ tạo task khi có yêu cầu, cam kết hoặc hành động rõ ràng.
 - Giữ nguyên bí danh USER_xx; không đoán danh tính thật.
-- Không đoán owner/deadline. Không rõ thì trả null; nếu có deadline, giữ nguyên cụm từ trong message.
+- Ghi chú về người thực hiện (owner_ref):
+  + Nếu task giao chung cho cả lớp (tag @Learner hoặc [ROLE_MENTION]): đặt owner_ref = "Learner".
+  + Nếu task giao đích danh hoặc nhắc đến USER_YOU: đặt owner_ref = "USER_YOU" và ưu tiên đưa lên đầu.
+  + Nếu không rõ người thực hiện, trả null. Không đoán mò.
+- Không bịa deadline. Nếu có deadline, giữ nguyên cụm từ trong message; không rõ thì trả null.
 - Task đã hoàn thành hoặc bị hủy vẫn phải đánh dấu done/cancelled để hệ thống loại bỏ.
 - Gộp ngữ cảnh reply; không biến câu hỏi hoặc ý tưởng vu vơ thành task chắc chắn.
 - Mỗi task/quyết định/câu hỏi phải có evidence_refs tồn tại trong DỮ LIỆU.
