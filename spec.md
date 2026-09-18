@@ -9,14 +9,14 @@ Loại: [x] Tối ưu tính năng có sẵn (Cải tiến bản tin bot) / Tính
 - **Problem statement (KHÔNG chữ AI):** Học viên gặp tình trạng quá tải thông tin khi đăng nhập vào Discord do thông báo bị phân tán trên nhiều kênh và trôi nhanh giữa các tin thảo luận; họ mất nhiều thời gian lội đọc từng kênh hoặc đọc các bản tin tổng hợp dạng khối chữ dài không phân cấp, dẫn đến việc bỏ sót thông báo khẩn cấp và bị phạt điểm hoặc phạt vắng.
 - **Evidence (chuẩn A và/hoặc B — log đầy đủ trong repo):**
   - **Số liệu mining / kết quả khảo sát (n = ?, % xác nhận):**
-    - Chuẩn B: Mining dữ liệu từ `data/discord-pack/k4_messages.csv` (1.092 tin nhắn / 24 kênh và luồng trong 3 ngày) và `data/discord-pack/k4_daily_reports.md` (bản tin bot hiện tại là khối chữ dài >500 từ, không phân cấp khẩn cấp, dính lỗi ngớ ngẩn chèn từ và câu bị cắt cụt).
+    - Chuẩn B: Mining dữ liệu từ `data/discord-pack/k4_messages.csv` (1.092 tin nhắn / 24 kênh và luồng trong 3 ngày) và `data/discord-pack/k4_daily_reports.md` (bản tin bot hiện tại là khối chữ dài >500 từ, không phân cấp khẩn cấp, dính lỗi câu bị cắt cụt và thiếu trích xuất deadline).
     - Chuẩn A: Khảo sát thực tế $n = 20$ học viên ngoài nhóm trong ngày 17/9: **17/20 học viên (85%)** xác nhận bị ngợp trước số lượng tin nhắn khi vào Discord; **14/20 học viên (70%)** từng suýt hoặc đã bỏ lỡ thông báo quan trọng do tin trôi; **16/20 học viên (80%)** không đọc bản tin bot cũ vì quá dài và không có thứ tự ưu tiên.
   - **≥5 quote/ví dụ nguyên văn + nguồn:**
-    1. `k4_daily_reports.md` (2026-09-14): *"Học viên thắc mắc về việc deadline ghép đội tự do nguồn tham chiếu?t thúc sớm hơn dự nguồn tham chiếuiến..."*
+    1. `k4_daily_reports.md` (Bản tin bot ngày 14/09): *"Học viên thắc mắc về việc deadline ghép đội tự do kết thúc sớm hơn dự kiến..."*
     2. `[M98666]` (`k4_messages.csv`): *"[@BOT] thời gian mở daily standup và kết thúc là khi nào vậy? hôm qua mình gửi sớm daily standup thì không được, chiều nay quá deadline thì nó lại blocked mình."*
     3. `[M19124]` (`k4_messages.csv`): *"a oi sao deadline ghép đội tự do end sớm vậy a?"*
-    4. Quote khảo sát 1 (Học viên Đ.M.K): *"Nhiều kênh quá, đi làm về mở Discord lên thấy chấm đỏ tùm lum, mình chỉ muốn biết hôm nay có deadline gì hay có link Zoom mới không thôi."*
-    5. Quote khảo sát 2 (Học viên N.H.L): *"Bản tin của bot hiện tại viết một cục dài ngoằng, đọc xong chả đọng lại được việc gì phải làm trước việc gì phải làm sau."*
+    4. Quote khảo sát 1 (Học viên ẩn danh A): *"Nhiều kênh quá, đi làm về mở Discord lên thấy chấm đỏ tùm lum, mình chỉ muốn biết hôm nay có deadline gì hay có link Zoom mới không thôi."*
+    5. Quote khảo sát 2 (Học viên ẩn danh B): *"Bản tin của bot hiện tại viết một cục dài ngoằng, đọc xong chả đọng lại được việc gì phải làm trước việc gì phải làm sau."*
 
 ## §2. Impact & quyết định chọn
 - **Bảng impact ≥3 ứng viên (bao nhiêu người · tần suất · tốn gì mỗi lần · khả thi):**

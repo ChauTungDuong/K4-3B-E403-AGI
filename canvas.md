@@ -4,7 +4,7 @@
 2. **Job executor:** Học viên Khóa 4 vừa đăng nhập vào Discord sau thời gian bận/offline, cần cập nhật nhanh các thông báo quan trọng.
 3. **Pain một câu:** Học viên mở Discord sau 24h offline thì bị ngợp trước hàng chục kênh và hàng trăm tin nhắn mới, bản tin bot cũ dài dòng không phân loại khẩn cấp, dẫn đến mất 20–30 phút lội tin hoặc bỏ lỡ deadline/link Zoom bị trừ điểm.
 4. **1–2 bằng chứng đầu:**
-   - Mining dữ liệu: Trong discord-pack có 1.092 tin/3 ngày; bản tin hiện tại của bot (k4_daily_reports.md) là văn bản đặc quánh >500 từ, không xếp thứ tự ưu tiên, dính lỗi nối chuỗi ("nguồn tham chiếuthi") và cắt cụt câu.
+   - Mining dữ liệu: Trong discord-pack có 1.092 tin/3 ngày; bản tin hiện tại của bot (k4_daily_reports.md) là văn bản đặc quánh >500 từ, không xếp thứ tự ưu tiên và dính lỗi cắt cụt câu.
    - Khảo sát thực tế: 17/20 học viên ngoài nhóm (85%) xác nhận bị quá tải thông báo Discord và từng bỏ sót tin nhắn quan trọng.
 5. **Lát cắt MỘT CÂU:** Một học viên · yêu cầu tóm tắt thông báo Discord trong 24h qua · AI quyết định phân loại và xếp hạng thông báo theo 3 tầng ưu tiên (P1 Khẩn cấp / P2 Quan trọng / P3 Đọc thêm) kèm trích xuất deadline · học viên nhận được bản tóm tắt có cấu trúc ≤8 dòng trong 3 giây kèm link nhảy đến tin nhắn gốc.
 6. **Automation & Willing users:**
