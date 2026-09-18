@@ -230,8 +230,6 @@ Hệ thống không hỗ trợ giải bài tập hộ hoặc duyệt đơn xin n
   2. Hoàng Anh Minh (MSSV: 2A202602566)
   3. Hoàng Phong (MSSV: 2A202602943)
   4. Lê Trung Kiên (MSSV: 2A202602748)
-  5. Vũ Quốc Huy (MSSV: 2A202602929)
-  - *Nhật ký kiểm chứng người dùng thực tế:* Toàn bộ phản hồi định tính của 5 người dùng được ghi nhận đầy đủ tại [`validation/user_testing_log.md`](validation/user_testing_log.md).
 - Multi-prototype (nếu làm): Không áp dụng (nhóm tập trung toàn lực vào hoàn thiện và kiểm thử Discord Bot tích hợp AI thật tại `codebase/bot-discord/bot_summary/`).
 
 ## §9. Changelog
