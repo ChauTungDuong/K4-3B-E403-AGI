@@ -1,0 +1,7 @@
+xây dựng bot cho server discord phục vụ 2 chức năng chính
+
+1. tóm tắt nội dung trong các kênh chỉ định theo thời gian cấu hình để tạo ra list các việc có phân theo các mức ưu tiên cho người dùng
+2. phân tích xu hướng trong các kênh chỉ định theo thời gian cấu hình để cho người dùng biết có gì hot, có gì mới, có toxic,...
+
+có yêu cầu bỏ đi thông tin cá nhân khi bot trả kết quả
+
