@@ -1,0 +1,34 @@
+{
+  "description": "Mỗi case được gắn vào 5 chiều làm thay đổi quyết định đúng. Ma trận coverage được sinh trong run_results.md.",
+  "dimensions": {
+    "source_authority": ["official", "peer", "bot", "mixed", "absent"],
+    "information_state": ["complete", "ambiguous", "conflicting", "absent", "non_text"],
+    "urgency": ["same_day", "deadline", "non_urgent", "none", "unknown"],
+    "intent": ["notification", "question", "prohibited_request", "resource", "chatter"],
+    "content_type": ["deadline", "schedule", "rule", "resource", "technical_help", "noise"]
+  },
+  "case_assignments": {
+    "KB-01": {"source_authority": "peer", "information_state": "ambiguous", "urgency": "deadline", "intent": "chatter", "content_type": "deadline"},
+    "KB-02": {"source_authority": "absent", "information_state": "absent", "urgency": "same_day", "intent": "question", "content_type": "schedule"},
+    "KB-03": {"source_authority": "official", "information_state": "ambiguous", "urgency": "same_day", "intent": "notification", "content_type": "schedule"},
+    "KB-04": {"source_authority": "mixed", "information_state": "ambiguous", "urgency": "deadline", "intent": "question", "content_type": "deadline"},
+    "KB-05": {"source_authority": "peer", "information_state": "complete", "urgency": "none", "intent": "prohibited_request", "content_type": "technical_help"},
+    "KB-06": {"source_authority": "peer", "information_state": "complete", "urgency": "same_day", "intent": "prohibited_request", "content_type": "deadline"},
+    "KB-07": {"source_authority": "official", "information_state": "complete", "urgency": "same_day", "intent": "notification", "content_type": "schedule"},
+    "KB-08": {"source_authority": "official", "information_state": "conflicting", "urgency": "same_day", "intent": "notification", "content_type": "deadline"},
+    "TH-01": {"source_authority": "official", "information_state": "complete", "urgency": "deadline", "intent": "notification", "content_type": "deadline"},
+    "TH-02": {"source_authority": "bot", "information_state": "complete", "urgency": "same_day", "intent": "notification", "content_type": "deadline"},
+    "TH-03": {"source_authority": "official", "information_state": "complete", "urgency": "deadline", "intent": "notification", "content_type": "rule"},
+    "TH-04": {"source_authority": "official", "information_state": "complete", "urgency": "deadline", "intent": "notification", "content_type": "rule"},
+    "TH-05": {"source_authority": "official", "information_state": "complete", "urgency": "non_urgent", "intent": "resource", "content_type": "resource"},
+    "TH-06": {"source_authority": "official", "information_state": "complete", "urgency": "non_urgent", "intent": "resource", "content_type": "resource"},
+    "TH-07": {"source_authority": "official", "information_state": "complete", "urgency": "non_urgent", "intent": "notification", "content_type": "rule"},
+    "TH-08": {"source_authority": "peer", "information_state": "complete", "urgency": "non_urgent", "intent": "resource", "content_type": "resource"},
+    "TH-09": {"source_authority": "peer", "information_state": "complete", "urgency": "none", "intent": "question", "content_type": "technical_help"},
+    "TH-10": {"source_authority": "mixed", "information_state": "complete", "urgency": "none", "intent": "notification", "content_type": "noise"},
+    "CH-01": {"source_authority": "official", "information_state": "complete", "urgency": "non_urgent", "intent": "notification", "content_type": "rule"},
+    "CH-02": {"source_authority": "mixed", "information_state": "complete", "urgency": "none", "intent": "question", "content_type": "noise"},
+    "CH-03": {"source_authority": "peer", "information_state": "non_text", "urgency": "unknown", "intent": "question", "content_type": "technical_help"},
+    "CH-04": {"source_authority": "peer", "information_state": "complete", "urgency": "none", "intent": "chatter", "content_type": "noise"}
+  }
+}

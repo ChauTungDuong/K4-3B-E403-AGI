@@ -101,7 +101,7 @@ Mỗi chiều chất lượng được định nghĩa bằng quy tắc kiểm ch
 
 | # | Chiều chất lượng | Định nghĩa kiểm chứng được (Hai người ngoài nhóm chấm ra cùng kết quả) | Tiêu chí kỹ thuật (Evaluator Logic) |
 |---|---|---|---|
-| **1** | **Correctness**<br>*(Đúng tầng ưu tiên)* | Tầng ưu tiên gán cho tin (`P1` / `P2` / `P3` / `REFUSE` / `EXCLUDE`) khớp **chính xác 100%** với `expected_tier`. Không có mức "gần đúng". | Phải chứa đúng nhãn tier chỉ định, không chứa nhãn sai (ví dụ P1 không được lẫn P3). |
+| **1** | **Correctness**<br>*(Đúng tầng ưu tiên)* | Tầng ưu tiên gán cho tin (`P1` / `P2` / `P3` / `REFUSE` / `EXCLUDE`) khớp `expected_tier`; nếu case khai báo `accepted_tiers` thì phải thuộc đúng tập đó. | So sánh trường tier có cấu trúc, không suy từ văn phong. |
 | **2** | **Grounding / Factuality**<br>*(Tuyệt đối không bịa)* | Mọi thông tin (thời gian, hạn nộp, mã ID phòng, tên repo, link) phải truy xuất được từ ngữ cảnh tin nhắn đầu vào. Thông tin không có nguồn = **FAIL**. | Không xuất hiện thực thể bịa đặt (hallucinated entity). |
 | **3** | **Traceability**<br>*(Dẫn nguồn minh bạch)* | Mọi mục thông báo P1 và P2 trong Digest bắt buộc kèm đúng tên kênh Discord thực tế và link trỏ tới tin nhắn gốc. | Có định danh kênh (ví dụ: `# 📢-thông-báo-lớp-học`, `# 3b-lab-e403`) và link/ID tin gốc. |
 | **4** | **Timeliness**<br>*(Ưu tiên thông tin mới nhất)* | Khi có $\ge 2$ tin mâu thuẫn về thời gian/trạng thái sự kiện (ví dụ: freeze vs mở lại gia hạn), AI bắt buộc chỉ phản ánh tin có `created_at` **mới nhất**. | Khớp `must_include` của mốc giờ mới, cấm xuất hiện mốc giờ cũ đã bị hủy. |
@@ -169,13 +169,11 @@ Trong đó:
 
 ### 7.5. Bảng Kết Quả Đo Lường Thực Tế Các Lượt Chạy
 
-Theo hướng dẫn tại CP3, nhóm triển khai kiểm thử đối chiếu trên prototype AI chạy thật (Gemini 1.5 Flash API có log vết prompt/output):
+Theo hướng dẫn tại CP3, nhóm chạy runner bằng Gemini thật và lưu prompt/phản hồi thô dạng JSONL. Bằng chứng chi tiết nằm trong `eval/run_results.md`, `eval/latest_results.json` và `eval/runs/`.
 
 | Lượt | Thời điểm | Model / Prompt Version | Pass / 22 | Tỷ lệ (%) | P1 Recall | Safety / Grounding | Độ dài $\le 8$ dòng | Trạng thái Quality Bar | Ghi chú & Phân tích lỗi |
 |---|---|---|---|---|---|---|---|---|---|
-| **Run 1** *(CP3)* | 14:30 18/09 | Gemini 1.5 Flash · Prompt v1.0 | **19 / 22** | **86.4%** | **100%** (7/7) | **100%** (4/4) | 21 / 22 (95.5%) | **ĐẠT (PASS)** | Thất bại 3 case: KB-04 (chưa cảnh báo mốc 12h trưa), CH-01 (chưa deduplicate triệt để 2 kênh), TH-01 (nén hơi dài 3 dòng). |
-| **Run 2** *(CP4)* | 20:00 18/09 | Gemini 1.5 Flash · Prompt v2.0 (Few-shot + Deduplication Rules) | **21 / 22** | **95.5%** | **100%** (7/7) | **100%** (4/4) | 22 / 22 (100%) | **ĐẠT XUẤT SẮC** | Đã sửa triệt để KB-04 và CH-01. Còn 1 case CH-03 gán nhãn P3 nhưng diễn giải hơi dài. |
-| **Run 3** *(CP5)* | 10:00 19/09 | Gemini 1.5 Flash · Prompt v2.1 (Post-validation refinement) | **22 / 22** | **100%** | **100%** (7/7) | **100%** (4/4) | 22 / 22 (100%) | **HOÀN HẢO** | Tinh chỉnh prompt dựa trên phản hồi từ 5 người dùng thử nghiệm độc lập. |
+| **Run có trace gần nhất** | Xem timestamp trong `eval/run_results.md` | Model lấy từ `.env` | **19 / 22** | **86.4%** | **100%** (8/8) | **100%** (4/4) | 22 / 22 (100%) | **ĐẠT Quality Bar** | Sai TH-03, TH-04 do thiếu cụm bắt buộc; TH-05 gán P1 thay vì P2. |
 
 #### Phân tích chi tiết thất bại ở Lượt 1 (Baseline Failure Analysis):
 1. **Case KB-04 (Mơ hồ mốc 12h):** Prompt v1.0 tự động hiểu "12h ngày mai" là 23:59 đêm, không đưa ra cảnh báo cẩn trọng cho học viên $\rightarrow$ Vi phạm chiều *Grounding*.  

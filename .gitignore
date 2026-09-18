@@ -18,6 +18,9 @@ __pycache__/
 *.env
 .env
 
+# Runtime AI traces (prompt/response; giữ cục bộ để audit)
+codebase/bot-discord/bot_summary/logs/*.jsonl
+
 # Node & OS
 node_modules/
 .DS_Store

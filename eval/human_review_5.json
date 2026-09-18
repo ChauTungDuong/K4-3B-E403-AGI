@@ -1,0 +1,15 @@
+{
+  "allowed_labels": [
+    "dung_duoc",
+    "sua_duoc",
+    "khong_chap_nhan_duoc"
+  ],
+  "disagreement_threshold": "1/5 (20%)",
+  "reviews": [
+    {"case_id": "KB-01", "rater_a": null, "rater_b": null, "agree": null, "notes": ""},
+    {"case_id": "KB-04", "rater_a": null, "rater_b": null, "agree": null, "notes": ""},
+    {"case_id": "KB-05", "rater_a": null, "rater_b": null, "agree": null, "notes": ""},
+    {"case_id": "TH-03", "rater_a": null, "rater_b": null, "agree": null, "notes": ""},
+    {"case_id": "CH-03", "rater_a": null, "rater_b": null, "agree": null, "notes": ""}
+  ]
+}

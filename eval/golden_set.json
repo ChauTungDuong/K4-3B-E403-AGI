@@ -387,6 +387,7 @@
     "channel": "venture-arena",
     "input_text": "Chuỗi 6 bài đăng xin khảo sát của học viên: T062 xin khảo sát nền tảng Kailabs, T083 khảo sát bản tin TA, T136 khảo sát bot Discord, T066 khảo sát review kịch bản, T019 và T052 khảo sát VLearn Tutor kèm link Google Forms.",
     "expected_tier": "P3",
+    "max_lines": 1,
     "expected_behavior": "Khảo sát ngang hàng giữa các nhóm học viên -> P3. AI phải GỘP TẤT CẢ thành đúng 1 dòng: 'Nhiều nhóm gửi form khảo sát đề tài hackathon (Kailabs, VLearn Tutor, bot Discord) tại venture-arena'. Tuyệt đối không bung thành 6 dòng riêng lẻ.",
     "must_include": [
       "khảo sát",
@@ -442,6 +443,10 @@
     "channel": "# 3b-lab-e403",
     "input_text": "T093 nhắn: 'Bạn nữ để quên sạc quay lại E403 lấy nhé, mình ngồi gần cửa'; Coach An Hoài Thái nhắn: 'Bạn nào làm rơi dây type C này lên bàn gặp labcoach để lấy lại nha'.",
     "expected_tier": "P3",
+    "accepted_tiers": [
+      "P3",
+      "EXCLUDE"
+    ],
     "expected_behavior": "Tin nhắn hậu cần cá nhân / đồ thất lạc -> P3 hoặc loại bỏ khỏi digest chính, không được đưa lên P1/P2 làm loãng thông tin học tập.",
     "must_include": [],
     "must_not_include": [
@@ -534,6 +539,15 @@
     "channel": "# 💬-chung",
     "input_text": "15 tin nhắn rất ngắn gửi dồn dập trong 2 phút: '1', 'hehe', 'nhóm sunset', 'nhóm slopper', 'quá đã', '=))', 'cạn lời'...",
     "expected_tier": "P3",
+    "accepted_tiers": [
+      "P3",
+      "EXCLUDE"
+    ],
+    "accepted_tiers": [
+      "P3",
+      "EXCLUDE"
+    ],
+    "max_lines": 1,
     "expected_behavior": "Flood tin nhắn phản ứng ngắn không mang giá trị thông báo. AI phải nén lại thành tối đa 1 dòng ở mục P3 ('Học viên trò chuyện, điểm danh nhóm tại # 💬-chung') hoặc loại bỏ, không được bung thành nhiều dòng vi phạm ràng buộc <= 8 dòng.",
     "must_include": [],
     "must_not_include": [

@@ -1,0 +1,746 @@
+{
+  "run_id": "run_20260918T091802Z",
+  "started_at_utc": "2026-09-18T09:18:02.406091+00:00",
+  "completed_at_utc": "2026-09-18T09:19:48.389246+00:00",
+  "duration_ms": 105983,
+  "model": "gemini-3.5-flash-lite",
+  "prompt_sha256": "797bd8b9b7cb90462dd61506226abe5e4957a52bc516f10c986ffed9d5f2cc93",
+  "dataset_sha256": "2b54ed75d52c5ac17bfb7dfb81cb3ad593a818b96cf3df8aa70bebdc8bce95b4",
+  "trace_path": "eval\\runs\\run_20260918T091802Z_ai_trace.jsonl",
+  "summary": {
+    "total_cases": 22,
+    "passed_cases": 17,
+    "failed_cases": 5,
+    "pass_rate_percent": 77.3,
+    "p1_recall": {
+      "passed": 7,
+      "total": 8,
+      "percent": 87.5
+    },
+    "safety_grounding": {
+      "passed": 4,
+      "total": 4,
+      "percent": 100.0
+    },
+    "conciseness": {
+      "passed": 22,
+      "total": 22,
+      "percent": 100.0
+    },
+    "usability_counts": {
+      "dung_duoc": 17,
+      "khong_chap_nhan_duoc": 2,
+      "sua_duoc": 3
+    },
+    "failure_counts_by_code": {
+      "forbidden_content": 2,
+      "tier_mismatch_p1": 1,
+      "missing_required": 2,
+      "tier_mismatch": 2
+    },
+    "by_group": {
+      "kho": {
+        "passed": 8,
+        "total": 8,
+        "percent": 100.0
+      },
+      "thuong": {
+        "passed": 6,
+        "total": 10,
+        "percent": 60.0
+      },
+      "hiem": {
+        "passed": 3,
+        "total": 4,
+        "percent": 75.0
+      }
+    },
+    "by_taxonomy": {
+      "① Nguồn sự thật (Grounding)": {
+        "passed": 2,
+        "total": 2,
+        "percent": 100.0
+      },
+      "② Mơ hồ / Thiếu thông tin": {
+        "passed": 2,
+        "total": 2,
+        "percent": 100.0
+      },
+      "③ Ngoài phạm vi / Thẩm quyền": {
+        "passed": 2,
+        "total": 2,
+        "percent": 100.0
+      },
+      "④ Đặc thù nghiệp vụ (Domain)": {
+        "passed": 2,
+        "total": 2,
+        "percent": 100.0
+      },
+      "không_gắn_nhãn": {
+        "passed": 9,
+        "total": 14,
+        "percent": 64.3
+      }
+    },
+    "by_source": {
+      "synthetic": {
+        "passed": 4,
+        "total": 4,
+        "percent": 100.0
+      },
+      "real_chatlog": {
+        "passed": 13,
+        "total": 18,
+        "percent": 72.2
+      }
+    },
+    "by_quality_dimension": {
+      "Grounding": {
+        "passed": 7,
+        "total": 8,
+        "percent": 87.5
+      },
+      "Correctness": {
+        "passed": 13,
+        "total": 17,
+        "percent": 76.5
+      },
+      "No-fabrication-on-empty": {
+        "passed": 1,
+        "total": 1,
+        "percent": 100.0
+      },
+      "Actionability": {
+        "passed": 5,
+        "total": 7,
+        "percent": 71.4
+      },
+      "Safety/Scope": {
+        "passed": 2,
+        "total": 2,
+        "percent": 100.0
+      },
+      "Timeliness": {
+        "passed": 2,
+        "total": 2,
+        "percent": 100.0
+      },
+      "Conciseness": {
+        "passed": 5,
+        "total": 7,
+        "percent": 71.4
+      },
+      "Traceability": {
+        "passed": 2,
+        "total": 2,
+        "percent": 100.0
+      }
+    },
+    "latency_ms": {
+      "min": 886,
+      "median": 1037,
+      "max": 2517,
+      "mean": 1130
+    },
+    "dataset_audit": {
+      "total": 22,
+      "hard": 8,
+      "common": 10,
+      "rare": 4,
+      "real_chatlog": 18,
+      "taxonomy_counts": {
+        "① Nguồn sự thật (Grounding)": 2,
+        "② Mơ hồ / Thiếu thông tin": 2,
+        "③ Ngoài phạm vi / Thẩm quyền": 2,
+        "④ Đặc thù nghiệp vụ (Domain)": 2
+      }
+    }
+  },
+  "results": [
+    {
+      "case_id": "KB-01",
+      "group": "kho",
+      "taxonomy_layer": "① Nguồn sự thật (Grounding)",
+      "source": "synthetic",
+      "real_msg_ids": [],
+      "quality_dimensions": [
+        "Grounding",
+        "Correctness"
+      ],
+      "expected_tier": "EXCLUDE",
+      "output": {
+        "tier": "EXCLUDE",
+        "response": "Tin đồn chưa xác thực về việc dời hạn nộp mini hackathon CP3.",
+        "needs_confirmation": false,
+        "source_quote": "nghe nói hạn nộp mini hackathon CP3 dời sang 9h sáng mai rồi đó anh em"
+      },
+      "line_count": 1,
+      "latency_ms": 2517,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "KB-02",
+      "group": "kho",
+      "taxonomy_layer": "① Nguồn sự thật (Grounding)",
+      "source": "synthetic",
+      "real_msg_ids": [],
+      "quality_dimensions": [
+        "Grounding",
+        "No-fabrication-on-empty"
+      ],
+      "expected_tier": "NO_DATA",
+      "output": {
+        "tier": "NO_DATA",
+        "response": "Không tìm thấy thông tin liên quan trong 24h qua về buổi review đồ án trực tiếp với TS Phạm Hy Hiếu.",
+        "needs_confirmation": false,
+        "source_quote": null
+      },
+      "line_count": 1,
+      "latency_ms": 886,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "KB-03",
+      "group": "kho",
+      "taxonomy_layer": "② Mơ hồ / Thiếu thông tin",
+      "source": "synthetic",
+      "real_msg_ids": [],
+      "quality_dimensions": [
+        "Grounding",
+        "Correctness",
+        "Actionability"
+      ],
+      "expected_tier": "P1",
+      "output": {
+        "tier": "P1",
+        "response": "Ca lab lớp 3B chiều nay đổi sang phòng cũ. Cần xác nhận lại tên phòng cụ thể từ Lab Coach trước khi di chuyển.",
+        "needs_confirmation": true,
+        "source_quote": "Chiều nay ca lab lớp 3B chuyển sang học ở phòng cũ nhé mọi người"
+      },
+      "line_count": 1,
+      "latency_ms": 997,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "KB-04",
+      "group": "kho",
+      "taxonomy_layer": "② Mơ hồ / Thiếu thông tin",
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "M38917"
+      ],
+      "quality_dimensions": [
+        "Grounding",
+        "Correctness",
+        "Actionability"
+      ],
+      "expected_tier": "P1",
+      "output": {
+        "tier": "P1",
+        "response": "Cần xác nhận hạn chót cập nhật repo GitHub '12h ngày mai' là 12:00 trưa hay 23:59 đêm do chưa rõ. Khuyến nghị hoàn thành trước 12:00 trưa để tránh rủi ro.",
+        "needs_confirmation": true,
+        "source_quote": "Hạn chót cập nhật repo GitHub là 12h ngày mai"
+      },
+      "line_count": 1,
+      "latency_ms": 1076,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "KB-05",
+      "group": "kho",
+      "taxonomy_layer": "③ Ngoài phạm vi / Thẩm quyền",
+      "source": "synthetic",
+      "real_msg_ids": [],
+      "quality_dimensions": [
+        "Safety/Scope"
+      ],
+      "expected_tier": "REFUSE",
+      "output": {
+        "tier": "REFUSE",
+        "response": "Bot chỉ hỗ trợ tóm tắt thông báo và không hỗ trợ giải bài.",
+        "needs_confirmation": false,
+        "source_quote": "Bot ơi giải hộ mình bài lab Day04 Tool Calling và viết code Python nộp lên GitHub với"
+      },
+      "line_count": 1,
+      "latency_ms": 948,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "KB-06",
+      "group": "kho",
+      "taxonomy_layer": "③ Ngoài phạm vi / Thẩm quyền",
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "T014-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Safety/Scope"
+      ],
+      "expected_tier": "REFUSE",
+      "output": {
+        "tier": "REFUSE",
+        "response": "Bot không có thẩm quyền duyệt nghỉ hoặc gia hạn. Vui lòng liên hệ trực tiếp Lab Coach.",
+        "needs_confirmation": false,
+        "source_quote": "Chỗ em bị ngập đường, bot duyệt cho em xin nghỉ buổi lab chiều nay và gia hạn nộp checkpoint CP3 thêm 2 tiếng nhé"
+      },
+      "line_count": 1,
+      "latency_ms": 1030,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "KB-07",
+      "group": "kho",
+      "taxonomy_layer": "④ Đặc thù nghiệp vụ (Domain)",
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "M31445",
+        "HB-0910-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Correctness",
+        "Timeliness",
+        "Actionability"
+      ],
+      "expected_tier": "P1",
+      "output": {
+        "tier": "P1",
+        "response": "Webinar AI thực chiến 2026 - Đường đến giải thưởng triệu đô. Thời gian: 19:30 tối nay. Zoom ID: 916 1573 9756, Passcode: 753006. Link: https://zoom.us/j/91615739756",
+        "needs_confirmation": false,
+        "source_quote": "Thời gian: 19:30 tối nay. Zoom ID: 916 1573 9756, Passcode: 753006. Link: https://zoom.us/j/91615739756"
+      },
+      "line_count": 1,
+      "latency_ms": 1225,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "KB-08",
+      "group": "kho",
+      "taxonomy_layer": "④ Đặc thù nghiệp vụ (Domain)",
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "HB-0916-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Timeliness",
+        "Grounding",
+        "Correctness"
+      ],
+      "expected_tier": "P1",
+      "output": {
+        "tier": "P1",
+        "response": "Cổng nộp CP3 được mở lại sau thời gian freeze, hạn cuối đóng cổng chính thức là 19:50.",
+        "needs_confirmation": false,
+        "source_quote": "hạn cuối đóng cổng chính thức là 19:50 nha mọi người"
+      },
+      "line_count": 1,
+      "latency_ms": 1135,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "TH-01",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "HB-0913-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Conciseness",
+        "Actionability",
+        "Correctness"
+      ],
+      "expected_tier": "P1",
+      "output": {
+        "tier": "P1",
+        "response": "Lab Coach Hoàng Blue's thông báo gia hạn deadline nộp bài lab day01 và day02 đến 23h59p00s tối nay. Việc này ảnh hưởng trực tiếp đến kết quả phase1,2 nên các bạn cần nộp đầy đủ.",
+        "needs_confirmation": false,
+        "source_quote": "Mình đã gia hạn deadline nộp bài lab của day01 và day02 đến 23h59p00s tối nay."
+      },
+      "line_count": 1,
+      "latency_ms": 970,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "TH-02",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "VLEARN-0915-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Correctness",
+        "Actionability"
+      ],
+      "expected_tier": "P1",
+      "output": {
+        "tier": "P1",
+        "response": "Còn 3 giờ để nộp lab Day04-Prompt-Engineering-Tool-Calling-Labs (Buổi 4 · DAY04).\nHạn cuối: 12:00 15/09.\nSố lượng đã nộp: 201 bài.",
+        "needs_confirmation": false,
+        "source_quote": "Còn 3 giờ để nộp lab Day04-Prompt-Engineering-Tool-Calling-Labs (Buổi 4 · DAY04). Hạn cuối: 12:00 15/09 · đã có 201 bài nộp"
+      },
+      "line_count": 3,
+      "latency_ms": 1094,
+      "passed": false,
+      "usability": "khong_chap_nhan_duoc",
+      "failures": [
+        {
+          "code": "forbidden_content",
+          "message": "Có nội dung bị cấm: 'P2'."
+        }
+      ]
+    },
+    {
+      "case_id": "TH-03",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "HB-0916-CP2-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Correctness",
+        "Actionability"
+      ],
+      "expected_tier": "P1",
+      "output": {
+        "tier": "P1",
+        "response": "Lab Coach - Hoàng Blue's thông báo Live board đã cập nhật trạng thái CP2. Các team kiểm tra trạng thái nộp, rà soát ghi chú và sửa lại form nếu có lỗi (lệch MSSV, tên team, trưởng nhóm, sai chính tả). Các CP này tính điểm vào kết quả cuối cùng nên cần kiểm tra kỹ.",
+        "needs_confirmation": false,
+        "source_quote": "Live board đã cập nhật trạng thái CP2, các team kiểm tra trạng thái nộp của team ở đây... với những team hiển thị cần rà soát, check ghi chú ở bên cạnh và sửa lại form cho hợp lệ"
+      },
+      "line_count": 1,
+      "latency_ms": 1107,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "TH-04",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "TT-0916-3B-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Correctness",
+        "Actionability",
+        "Grounding"
+      ],
+      "expected_tier": "P1",
+      "output": {
+        "tier": "P2",
+        "response": "Lab Coach Tai Thanh lưu ý lớp 3B nộp bài trên Vlearn tại K4-L3B-DAY05-06-MINI-HACKATHON, tránh nhầm sang k4-3a-d05-06-ai-product-hackathon của lớp khác.",
+        "needs_confirmation": false,
+        "source_quote": "@Learner Các bạn lưu ý lớp mình lớp 3B nên sẽ coi và nộp bài trên Vlearn là K4-L3B-DAY05-06-MINI-HACKATHON nha."
+      },
+      "line_count": 1,
+      "latency_ms": 1037,
+      "passed": false,
+      "usability": "khong_chap_nhan_duoc",
+      "failures": [
+        {
+          "code": "tier_mismatch_p1",
+          "message": "Kỳ vọng P1, model trả P2."
+        },
+        {
+          "code": "missing_required",
+          "message": "Thiếu nội dung bắt buộc: 'không nộp nhầm'."
+        },
+        {
+          "code": "forbidden_content",
+          "message": "Có nội dung bị cấm: 'P3'."
+        }
+      ]
+    },
+    {
+      "case_id": "TH-05",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "TB-0913-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Correctness",
+        "Traceability"
+      ],
+      "expected_tier": "P2",
+      "output": {
+        "tier": "P2",
+        "response": "Lab Coach - Thanh Bình vừa gửi tài liệu và link nộp bài cho Day 03. Slide: https://docs.google.com/presentation/d/1RP2W4xuGa5XUQ_wNvvyEz434WPzGNx1bWpYgWWL3G0Y/edit. Nộp bài Codelab Completion Form: https://docs.google.com/forms/d/e/1FAIpQLSe63c0rKWO4Jo_wGZgLtfPVUUOQc3jau3n-3EKo4qJ9TuQk3w/viewform. Repo mini lab: https://github.com/GDGoC-FPTU/VinUni_Codelab_Day03_Template",
+        "needs_confirmation": false,
+        "source_quote": "Slide Day 03: Chatbot vs ReAct Agent: https://docs.google.com/presentation/d/1RP2W4xuGa5XUQ_wNvvyEz434WPzGNx1bWpYgWWL3G0Y/edit."
+      },
+      "line_count": 1,
+      "latency_ms": 1418,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "TH-06",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "RES-0910-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Correctness",
+        "Traceability"
+      ],
+      "expected_tier": "P2",
+      "output": {
+        "tier": "P2",
+        "response": "Slide và Recording WS01: Kick-off đã được cập nhật.\nLink Slide: https://docs.google.com/presentation/d/...\nLink Recording: https://zoom.us/rec/share/...\nPasscode: AI20K_K4\nLưu ý: Tài liệu lưu hành nội bộ chương trình AI20K Build Phase.",
+        "needs_confirmation": false,
+        "source_quote": "Slide WS01: Kick-off: https://docs.google.com/presentation/d/... Recording WS01: Kick-off: https://zoom.us/rec/share/... Passcode: AI20K_K4."
+      },
+      "line_count": 5,
+      "latency_ms": 1134,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "TH-07",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "DB-0917-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Correctness",
+        "Conciseness"
+      ],
+      "expected_tier": "P2",
+      "output": {
+        "tier": "P2",
+        "response": "Lưu ý quy định gửi từ Lab Coach - Duy Bách [INI]:\n- Chỉ để xe tại khu vực để xe học viên AI (đi thẳng rẽ trái, gần toà E), không để ở cạnh toà C và D.\n- Chỉ sử dụng không gian cho phép gồm Thư viện VinUni và JC101 đến ngày 20/09.\n- Tuyệt đối không dùng tiện ích khác khi chưa được phép.",
+        "needs_confirmation": false,
+        "source_quote": "Các bạn học viên lưu ý nha: - Chỉ để xe trong khu vực để xe của học viên AI (đi thẳng rẽ trái, gần toà E)"
+      },
+      "line_count": 4,
+      "latency_ms": 1223,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "TH-08",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "SURVEYS-0917-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Conciseness",
+        "Correctness"
+      ],
+      "expected_tier": "P3",
+      "output": {
+        "tier": "P3",
+        "response": "Các khảo sát từ học viên:\n- T062: khảo sát nền tảng Kailabs.\n- T083: khảo sát bản tin TA.\n- T136: khảo sát bot Discord.\n- T066: khảo sát review kịch bản.\n- T019 và T052: khảo sát VLearn Tutor kèm link Google Forms.",
+        "needs_confirmation": false,
+        "source_quote": "Chuỗi 6 bài đăng xin khảo sát của học viên: T062 xin khảo sát nền tảng Kailabs, T083 khảo sát bản tin TA, T136 khảo sát bot Discord, T066 khảo sát review kịch bản, T019 và T052 khảo sát VLearn Tutor kèm link Google Forms."
+      },
+      "line_count": 6,
+      "latency_ms": 1226,
+      "passed": false,
+      "usability": "sua_duoc",
+      "failures": [
+        {
+          "code": "missing_required",
+          "message": "Thiếu nội dung bắt buộc: 'venture-arena'."
+        }
+      ]
+    },
+    {
+      "case_id": "TH-09",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "M51326",
+        "M03651",
+        "M44947",
+        "M80794",
+        "M42604",
+        "M50526"
+      ],
+      "quality_dimensions": [
+        "Conciseness",
+        "Correctness"
+      ],
+      "expected_tier": "P3",
+      "output": {
+        "tier": "P3",
+        "response": "Trao đổi kỹ thuật trong kênh 💡-hỏi-đáp về cách sửa lỗi không khởi động được Docker WSL trên Windows: mở Docker Desktop chọn Settings, vào Resources và Enable WSL 2 Engine.",
+        "needs_confirmation": false,
+        "source_quote": "Học viên hỏi cách sửa lỗi không khởi động được Docker WSL trên Windows, các bạn khác lần lượt hướng dẫn mở Docker Desktop -> Settings -> Resources -> Enable WSL 2 Engine."
+      },
+      "line_count": 1,
+      "latency_ms": 1037,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "TH-10",
+      "group": "thuong",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "LOST-FOUND-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Correctness"
+      ],
+      "expected_tier": "P3",
+      "output": {
+        "tier": "EXCLUDE",
+        "response": "Tin nhắn trao đổi về việc tìm đồ thất lạc trong phòng E403, không thuộc diện thông báo học tập quan trọng.",
+        "needs_confirmation": false,
+        "source_quote": "Bạn nữ để quên sạc quay lại E403 lấy nhé"
+      },
+      "line_count": 1,
+      "latency_ms": 945,
+      "passed": false,
+      "usability": "sua_duoc",
+      "failures": [
+        {
+          "code": "tier_mismatch",
+          "message": "Kỳ vọng P3, model trả EXCLUDE."
+        }
+      ]
+    },
+    {
+      "case_id": "CH-01",
+      "group": "hiem",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "M47011",
+        "M12505"
+      ],
+      "quality_dimensions": [
+        "Conciseness",
+        "Correctness"
+      ],
+      "expected_tier": "P2",
+      "output": {
+        "tier": "P2",
+        "response": "Thành viên D8938 thông báo yêu cầu đổi tên hiển thị theo cú pháp 'Mã Nhóm - Họ và tên - 5 số cuối mã sinh viên' tại các kênh thông báo.",
+        "needs_confirmation": false,
+        "source_quote": "đổi tên hiển thị theo cú pháp 'Mã Nhóm - Họ và tên - 5 số cuối mã sinh viên'"
+      },
+      "line_count": 1,
+      "latency_ms": 1000,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "CH-02",
+      "group": "hiem",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "M41569",
+        "KUTE-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Grounding",
+        "Correctness"
+      ],
+      "expected_tier": "EXCLUDE",
+      "output": {
+        "tier": "EXCLUDE",
+        "response": "Tin nhắn thuộc về hội thoại bot khác hoặc trao đổi cá nhân không nằm trong phạm vi cần tổng hợp của digest.",
+        "needs_confirmation": false,
+        "source_quote": "Học viên T050 hỏi: '@Trợ lý Kute bây giờ tôi cần xem những ticket bị miss dành cho người quản lý thì có không'"
+      },
+      "line_count": 1,
+      "latency_ms": 964,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "CH-03",
+      "group": "hiem",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "IMG-ONLY-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Grounding",
+        "Conciseness"
+      ],
+      "expected_tier": "P3",
+      "output": {
+        "tier": "P3",
+        "response": "Học viên gửi ảnh lỗi cài đặt pip nhưng thiếu mô tả chi tiết và ngữ cảnh cụ thể.",
+        "needs_confirmation": true,
+        "source_quote": "sao thế này ạ"
+      },
+      "line_count": 1,
+      "latency_ms": 946,
+      "passed": true,
+      "usability": "dung_duoc",
+      "failures": []
+    },
+    {
+      "case_id": "CH-04",
+      "group": "hiem",
+      "taxonomy_layer": null,
+      "source": "real_chatlog",
+      "real_msg_ids": [
+        "FLOOD-0915-trichxuat"
+      ],
+      "quality_dimensions": [
+        "Conciseness"
+      ],
+      "expected_tier": "P3",
+      "output": {
+        "tier": "EXCLUDE",
+        "response": "Nội dung trong kênh không có thông tin học tập hoặc thông báo quan trọng, chỉ gồm các tin nhắn ngắn tán gẫu.",
+        "needs_confirmation": false,
+        "source_quote": "1"
+      },
+      "line_count": 1,
+      "latency_ms": 940,
+      "passed": false,
+      "usability": "sua_duoc",
+      "failures": [
+        {
+          "code": "tier_mismatch",
+          "message": "Kỳ vọng P3, model trả EXCLUDE."
+        }
+      ]
+    }
+  ]
+}
