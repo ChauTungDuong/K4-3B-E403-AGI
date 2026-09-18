@@ -87,16 +87,3 @@
 2. **Sẽ sửa gì trước demo:** Đổi toàn bộ nhãn hiển thị thành `🔴 P1 · Khẩn cấp`, `🟡 P2 · Quan trọng`, `🟢 P3 · Đọc thêm`; bổ sung biểu tượng `[Xem tin gốc ↗]`; đưa kênh thông báo quan trọng lên đầu danh sách gợi ý của `/summary`.
 3. **Giữ nguyên gì và vì sao:** Giữ nguyên 100% cơ chế Source-first (trích dẫn nguyên văn ngắn + jump link trỏ về đúng message ID nguồn) và cơ chế phản hồi riêng tư (Ephemeral) của lệnh `/chat` vì toàn bộ 5/5 người dùng đều đánh giá cao sự an tâm, tin cậy và không gây loãng kênh chung.
 4. **Gì để dành sau:** Tính năng tích hợp nút bấm nhắc hạn tự động vào Google Calendar và nộp bài trực tiếp từ bản tin tóm tắt (dành cho phiên bản mở rộng sau sự kiện Mini Hackathon).
-
----
-
-## PHẦN III. KẾT LUẬN & ĐỐI CHIẾU TIÊU CHÍ RUBRIC
-
-- ✅ **Rubric R1 (Minh chứng nỗi đau & Khảo sát — 15 điểm):** Đạt trọn vẹn Chuẩn A ($n = 20 \ge 20$ người ngoài nhóm, tỷ lệ xác nhận 70%–85% vượt xa mốc 50%) và Chuẩn B (mining lỗi bản tin bot cũ trong discord-pack).
-- ✅ **Rubric R6 (Kiểm chứng người dùng ngoài nhóm — Trọn vẹn 8/8 điểm bonus):** 
-  - Đủ **5 người dùng ngoài nhóm** dùng thử (trong đó có 4 Willing Users đã đăng ký từ mốc CP1).
-  - Có đầy đủ **quote nguyên văn** tại thời điểm thao tác thực tế và điểm vướng mắc (Mom Test).
-  - Bảng nhật ký đủ **5 cột chuẩn**: Ai thử · Giao task gì · Kẹt ở đâu · Quote · Quyết định.
-  - Có đầy đủ **4 dòng kết luận bắt buộc** ở cuối bảng.
-  - Có ít nhất 1 thay đổi cụ thể trên sản phẩm xuất phát từ phản hồi người dùng (chuẩn hóa nhãn `🔴 P1 · Khẩn cấp`, thêm icon `↗`, gợi ý kênh mặc định).
-- ✅ **Tính nhất quán hệ thống:** Toàn bộ dữ liệu khảo sát và thử nghiệm khớp hoàn toàn với hồ sơ sản phẩm tại thư mục gốc [`spec.md`](../spec.md) và [`canvas.md`](../canvas.md).
