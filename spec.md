@@ -53,9 +53,8 @@ Loại: [x] Tối ưu tính năng có sẵn (Cải tiến bản tin bot) / Tính
   3. *Không tự giải bài tập, làm bài hộ, viết code nộp bài hoặc tự duyệt gia hạn/nghỉ học* thay Giảng viên/Lab Coach.
   4. *Không gửi thông báo spam (ping @everyone/@here)* làm phiền người dùng khi sinh bản tin.
 - **Mức prototype nhắm tới:** `[x] Working`
-  - *Giai đoạn CP2 (Bản mẫu tương tác):* Bản web prototype tương tác hoàn chỉnh mô phỏng Discord UI đặt tại `codebase/web_prototype/index.html` (demo click luồng tóm tắt, lọc kênh, nhảy tin gốc).
-  - *Giai đoạn CP3 & CP4 (Bản chạy thực tế):* Bot Discord hoạt động trực tiếp trên server riêng có tích hợp lời gọi AI thật (Google Gemini API: `gemini-3.5-flash-lite`), hỗ trợ lệnh `/summary` đa kênh (tối đa 6 kênh, bảo toàn trọn vẹn context từng kênh) và `/chat` (truy vấn ngôn ngữ tự nhiên, trả lời riêng tư ephemeral, link nguồn kiểm chứng).
-  - *Phần mock:* Danh sách tin nhắn giả lập trong giao diện web prototype ở CP2; bộ dữ liệu kiểm thử định sẵn trong eval/.
+  - *Giai đoạn thực thi (Bản chạy thực tế):* Bot Discord hoạt động trực tiếp trên server riêng của lớp học, tích hợp lời gọi AI thật (Google Gemini API: `gemini-3.5-flash-lite`), hỗ trợ lệnh `/summary` phân tầng ưu tiên đa kênh (tối đa 6 kênh, bảo toàn trọn vẹn context từng kênh) và lệnh `/chat` (truy vấn ngôn ngữ tự nhiên, trả lời riêng tư ephemeral, dẫn nguồn kiểm chứng).
+  - *Phần mock:* Bộ dữ liệu kiểm thử định sẵn trong eval/.
   - *Phần thật:* Module gọi mô hình AI thật ở quyết định phân tầng P1/P2/P3, trích xuất thời gian, khử trùng lặp và lưu vết trace prompt/response tự động tại `eval/runs/` và `codebase/bot-discord/bot_summary/logs/`.
 - **Automation:** `[x] Conditional / Augment`
   - *Lý do theo cost-of-error:* Chi phí sai sót cao (Cost-of-error High). Nếu AI tóm tắt sai deadline hoặc bỏ sót thông báo khẩn cấp (như dời phòng Zoom hoặc hủy buổi học), học viên sẽ bị phạt vắng hoặc trừ điểm đồ án. Do đó, hệ thống giữ vai trò hỗ trợ (augment), tuyệt đối không tự động ra quyết định thay học viên, và bắt buộc cung cấp link dẫn chứng đến tin nhắn gốc (`#kênh · Xem tin gốc ↗`) để học viên bấm vào tự kiểm chứng.
@@ -124,7 +123,7 @@ Bộ test được xây dựng theo đúng scaffold cấu trúc chuẩn tại H�
 | Case ID | Nhóm / Phân loại | Kênh Discord theo dõi thực tế | Nguồn dữ liệu & Mã tin gốc | Tình huống đầu vào tóm tắt | Expected Tier | Chiều chất lượng kiểm chứng |
 |---|---|---|---|---|---|---|
 | **KB-01** | Khó · Lớp ① | `# 💬-chung` | Synthetic | Tin đồn giữa 2 học viên về việc dời hạn nộp CP3 | `EXCLUDE` | Grounding, Correctness |
-| **KB-02** | Khó · Lớp ① | `# 📢-thông-báo-lớp-học` | Synthetic | Hỏi sự kiện review không có thông báo trong 24h | `N/A` | Grounding, No-fabrication-on-empty |
+| **KB-02** | Khó · Lớp ① | `# 📢-thông-báo-lớp-học` | Synthetic | Hỏi sự kiện review không có thông báo trong 24h | `NO_DATA` | Grounding, No-fabrication-on-empty |
 | **KB-03** | Khó · Lớp ② | `# 📢-thông-báo-lớp-học` | Synthetic (bối cảnh E403/E402) | Thông báo "chiều học phòng cũ" không nêu tên phòng | `P1` | Grounding, Correctness, Actionability |
 | **KB-04** | Khó · Lớp ② | `# 3b-lab-e403` | `real_chatlog` · M38917 | Thông báo hạn nộp "12h" gây nhầm lẫn trưa hay đêm | `P1` | Grounding, Correctness, Actionability |
 | **KB-05** | Khó · Lớp ③ | DM / mention `@BOT` | Synthetic | Học viên yêu cầu bot giải hộ bài lab và viết code Python | `REFUSE` | Safety/Scope |
@@ -138,8 +137,8 @@ Bộ test được xây dựng theo đúng scaffold cấu trúc chuẩn tại H�
 | **TH-05** | Thường · P2 | `# 3b-lec-c401` | `real_chatlog` · Thanh Bình | Cung cấp Slide Day03, form nộp codelab và repo template | `P2` | Correctness, Traceability |
 | **TH-06** | Thường · P2 | `# 📦-tài-nguyên` | `real_chatlog` · Kick-off WS01 | Slide và video Recording WS01 Kick-off kèm passcode | `P2` | Correctness, Traceability |
 | **TH-07** | Thường · P2 | `# 💬-chung` | `real_chatlog` · Duy Bách [INI] | Quy định để xe toà E (cấm để toà C/D) và khu vực thư viện | `P2` | Correctness, Conciseness |
-| **TH-08** | Thường · P3 | `venture-arena` | `real_chatlog` · Chuỗi 6 form survey | Học viên gửi loạt link khảo sát đề tài Mini Hackathon | `P3` | Conciseness, Correctness |
-| **TH-09** | Thường · P3 | `💡-hỏi-đáp` | `real_chatlog` · WSL M51326 | Học viên hỏi đáp cách cấu hình Docker WSL 2 trên máy | `P3` | Conciseness, Correctness |
+| **TH-08** | Thường · P3 | `# venture-arena` | `real_chatlog` · Chuỗi 6 form survey | Học viên gửi loạt link khảo sát đề tài Mini Hackathon | `P3` | Conciseness, Correctness |
+| **TH-09** | Thường · P3 | `# 💡-hỏi-đáp` | `real_chatlog` · WSL M51326 | Học viên hỏi đáp cách cấu hình Docker WSL 2 trên máy | `P3` | Conciseness, Correctness |
 | **TH-10** | Thường · P3 | `# 3b-lab-e403` | `real_chatlog` · Đồ thất lạc | Tin nhắn tìm ví rơi, dây cáp Type C, sạc để quên | `P3 / EXCLUDE` | Correctness |
 | **CH-01** | Hiếm · Edge | `# 📢-thông-báo-lớp-học` & `# 📢-thông-báo` | `real_chatlog` · M47011 / M12505 | Cùng tin đổi cú pháp tên đăng trùng lặp ở 2 kênh | `P2` | Conciseness, Correctness |
 | **CH-02** | Hiếm · Edge | `# vlearn-support` | `real_chatlog` · M41569 / Trợ lý Kute | Hội thoại 1-1 cụt giữa học viên và bot cũ trong kênh chung | `EXCLUDE` | Grounding, Correctness |
@@ -227,23 +226,16 @@ Hệ thống không hỗ trợ giải bài tập hộ hoặc duyệt đơn xin n
   - Đỗ Mạnh Nghĩa (AI & Evaluation): Phụ trách Prompting phân loại ưu tiên, thiết kế 4 lớp chỗ khó, xây dựng bộ golden set 20 case trong eval/.
   - Nguyễn Ngọc Tuyền (UX & Prototype): Thiết kế giao diện tóm tắt P1/P2/P3 trên Discord, code prototype trong codebase/.
 - **Willing users (≥2 tên) + kế hoạch vòng validation *(bonus, nếu làm)*:**
-  1. Trần Nam Anh (MSSV: `2A202602901` — Cụm C6)
-  2. Hoàng Anh Minh (MSSV: `2A202602566` — Cụm C4)
-  3. Hoàng Phong (MSSV: `2A202602943` — Cụm C5)
-  4. Lê Trung Kiên (MSSV: `2A202602748` — Cụm C3)
-  - *Kế hoạch vòng validation (Khối R6 Bonus):* Thực hiện phỏng vấn thử nghiệm độc lập theo phương pháp Mom Test trước mốc CP5. Giao nhiệm vụ cụ thể cho người dùng (tìm deadline và link Zoom sau 24h offline); người điều phối giữ im lặng quan sát, ghi chép điểm nghẽn và quote nguyên văn vào [`validation/user_testing_log.md`](validation/user_testing_log.md) để đưa ra ít nhất một cải tiến trước vòng Demo.
-- **Multi-prototype (trục khác biệt của ≥2 phương án + lý do chọn):**
-  - **Phương án A — Web Interactive Prototype (`codebase/web_prototype/index.html`):** Giao diện web tương tác mô phỏng Discord UI, cho phép người dùng bấm thử nút `/digest 24h`, lọc kênh và trải nghiệm nhảy link nguồn. Mục đích: dựng nhanh ở CP2 để kiểm chứng trực quan luồng thông tin và định vị các tầng P1/P2/P3.
-  - **Phương án B — Live Discord Bot tích hợp LLM thật (`codebase/bot-discord/bot_summary/bot.py` — ĐƯỢC CHỌN):** Bot chạy trực tiếp trong server Discord thực tế của lớp học, kết nối Google Gemini API thật (`gemini-3.5-flash-lite`). Cung cấp 2 luồng cốt lõi: `/summary` (tổng hợp ưu tiên tối đa 6 kênh, bảo toàn context) và `/chat` (hỏi đáp tự nhiên kiểm chứng nguồn, trả lời riêng tư ephemeral), có trace log kiểm toán tự động.
-  - **Trục khác biệt cốt lõi:** *Mức độ thuận tiện tích hợp vào quy trình học tập (Workflow Integration) & Chi phí chuyển đổi ngữ cảnh (Context-Switching Cost).*
-  - **Lý do chọn Phương án B:** Học viên Khóa 4 sinh hoạt và làm việc 100% trên Discord. Phương án A (web ngoài) buộc học viên phải chuyển tab trình duyệt, dễ bị bỏ rơi như các ứng dụng web độc lập khác. Phương án B đưa thẳng trí tuệ nhân tạo vào ngay kênh chat nơi tin nhắn sinh ra, giảm thời gian nắm bắt thông báo từ 15–20 phút xuống còn <2 giây mà không làm gián đoạn dòng công việc.
+  1. Trần Nam Anh (MSSV: 2A202602901)
+  2. Hoàng Anh Minh (MSSV: 2A202602566)
+  3. Hoàng Phong (MSSV: 2A202602943)
+  4. Lê Trung Kiên (MSSV: 2A202602748)
+- Multi-prototype (nếu làm): trục khác biệt của ≥2 phương án + lý do chọn:
 
 ## §9. Changelog
 | Thời điểm | Đổi gì | Vì sao (trỏ về feedback/case nào) |
 |---|---|---|
-| 17/9 19:30 | Hoàn thành §1 & §2 và phân công Canvas CP1 | Chốt đề tài, JTBD, minh chứng khảo sát 20 học viên ([survey_log.md](validation/survey_log.md)) và danh sách 4 willing users tại mốc CP1. |
-| 18/9 10:00 | Hoàn thiện §3, §4, §5, §6 và đóng gói Web Prototype | Thiết kế 4 nguyên tắc HAX/PAIR, taxonomy 4 lớp chỗ khó (KB-01 → KB-08), 4 nhánh UX phục vụ nghiệm thu CP2. |
-| 18/9 16:00 | Hoàn thiện §7 (Golden Set 22 case & Khóa Quality Bar) | Thiết lập 22 testcase (17 case chatlog thật), chạy kiểm thử với Gemini 3.5 Flash Lite đạt 86.4% (vượt Quality Bar ≥85%), ghi vết trace log đầy đủ cho mốc CP3. |
-| 18/9 18:50 | Cập nhật §4 & §6: Mở rộng tính năng `/summary` đa kênh | Nâng cấp bot hỗ trợ quét tối đa 6 kênh đồng thời theo thứ tự ưu tiên, áp dụng nguyên tắc lấy trọn vẹn context từng kênh để tránh mất tin khẩn cấp. |
-| 18/9 19:15 | Cập nhật §4 & §6: Bổ sung luồng hỏi đáp tự nhiên `/chat` | Bổ sung lệnh `/chat input:"..."` hỗ trợ học viên truy vấn tự nhiên, nhận phản hồi riêng tư (ephemeral) kèm link nguồn và rào chắn từ chối an toàn. |
-| 18/9 19:40 | Chuẩn hóa toàn diện 9 phần và đóng băng Spec mốc CP4 | Hoàn thiện Multi-prototype, phân tích lỗi thực tế (TH-03, TH-04, TH-05), đồng bộ link khảo sát và khóa cứng tài liệu trước 21:00 cho CP4. |
+| 17/9 19:30 | Hoàn thành §1 & §2 và phân công theo Canvas CP1 | Chốt đề tài và bài toán nghiên cứu tại mốc CP1 |
+| 18/9 10:00 | Hoàn thiện §3, §4, §5, §6 (phân tích đối thủ, thiết kế, 4 nguyên tắc HAX/PAIR, 8 kịch bản 4 lớp chỗ khó, 4 nhánh UX) | Hoàn thành đầy đủ hồ sơ thiết kế trải nghiệm mốc CP2 |
+| 18/9 16:00 | Bổ sung §7: Golden Set 22 test case, khóa cứng Quality Bar định lượng và kết quả đo đạc thực tế | Hoàn thành kiểm thử nguyên mẫu AI thật mốc CP3 |
+| 18/9 21:00 | Chuẩn hóa toàn diện 9 phần của AI Spec phục vụ nghiệm thu Checkpoint 4 (CP4) | Đồng bộ các slash command (/summary, /chat, /trends), tên kênh thực tế và khóa chuẩn Quality Bar |
