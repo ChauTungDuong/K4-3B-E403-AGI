@@ -78,6 +78,61 @@ class SummaryReporterTests(unittest.TestCase):
         self.assertIn("Không tìm thấy việc cần chú ý mới", embed.description)
         self.assertLessEqual(1 + len(embed.description.splitlines()), 8)
 
+    def test_p0_and_p1_distinction_and_owner_tags(self) -> None:
+        result = SummaryResult(
+            executive_summary="Có sự cố blocker.",
+            tasks=[
+                TaskItem(
+                    title="Hệ thống nộp form bị sập",
+                    priority="P0",
+                    status="open",
+                    owner_ref="Learner",
+                    reason="Blocker lớp học",
+                    confidence=0.99,
+                    evidence_refs=["MSG_001"],
+                ),
+                TaskItem(
+                    title="Nộp lại bài tập cá nhân",
+                    priority="P1",
+                    status="open",
+                    owner_ref="USER_YOU",
+                    deadline="23:59",
+                    reason="Cần làm ngay",
+                    confidence=0.95,
+                    evidence_refs=["MSG_002"],
+                ),
+            ],
+            analyzed_messages=2,
+        )
+
+        embed = summary_embeds(result, "#thông-báo", hours=1)[0]
+        self.assertIn("🚨 **BLOCKER KHẨN CẤP [Cả lớp]:**", embed.description)
+        self.assertIn("🔴 **CẦN LÀM NGAY [Dành cho bạn] · Trước 23:59:**", embed.description)
+        self.assertIn("📌 Có sự cố blocker.", embed.description)
+        self.assertLessEqual(1 + len(embed.description.splitlines()), 8)
+
+    def test_undisplayed_urgent_tasks_never_labeled_as_read_more(self) -> None:
+        result = SummaryResult(
+            executive_summary="Nhiều deadline cùng lúc.",
+            tasks=[
+                TaskItem(
+                    title=f"Task khẩn {i}",
+                    priority="P1",
+                    status="open",
+                    reason="Hạn nộp",
+                    confidence=0.95,
+                    evidence_refs=["MSG_001"],
+                )
+                for i in range(1, 6)
+            ],
+            analyzed_messages=10,
+        )
+
+        embed = summary_embeds(result, "#thông-báo", hours=1)[0]
+        self.assertIn("🔴 **CẦN LÀM NGAY (KHÁC):**", embed.description)
+        self.assertNotIn("🟢 **ĐỌC THÊM:**", embed.description)
+        self.assertLessEqual(1 + len(embed.description.splitlines()), 8)
+
 
 class ChatReporterTests(unittest.TestCase):
     def test_chat_answer_has_grounded_source_links(self) -> None:

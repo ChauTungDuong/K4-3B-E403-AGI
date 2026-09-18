@@ -67,7 +67,15 @@ def _summary_task_line(
     sources: SourceMap | None,
 ) -> str:
     confirmation = " · ⚠️ Cần xác nhận" if item.status == "needs_confirmation" else ""
-    if item.priority in {"P0", "P1"}:
+    target_tag = ""
+    if item.owner_ref == "USER_YOU":
+        target_tag = " [Dành cho bạn]"
+    elif item.owner_ref == "Learner":
+        target_tag = " [Cả lớp]"
+
+    if item.priority == "P0":
+        prefix = f"🚨 **BLOCKER KHẨN CẤP{target_tag}{confirmation}:**"
+    elif item.priority == "P1":
         qualifier = confirmation
         if not qualifier and item.deadline:
             deadline = _one_line(item.deadline, 40)
@@ -75,11 +83,11 @@ def _summary_task_line(
                 qualifier = f" · {deadline[0].upper()}{deadline[1:]}"
             else:
                 qualifier = f" · Trước {deadline}"
-        prefix = f"🔴 **CẦN LÀM NGAY{qualifier}:**"
+        prefix = f"🔴 **CẦN LÀM NGAY{target_tag}{qualifier}:**"
     elif item.priority == "P2":
-        prefix = f"🟡 **CẦN BIẾT{confirmation}:**"
+        prefix = f"🟡 **CẦN BIẾT{target_tag}{confirmation}:**"
     else:
-        prefix = f"🟢 **ĐỌC THÊM{confirmation}:**"
+        prefix = f"🟢 **ĐỌC THÊM{target_tag}{confirmation}:**"
     return (
         f"{prefix} {_action(item.title)}"
         f"{_source_suffix(item.evidence_refs, sources, 'Xem tin gốc ↗')}"
@@ -94,10 +102,15 @@ def _summary_more_line(
 ) -> str:
     parts: list[str] = []
     refs: list[str] = []
+    has_undisplayed_urgent = False
 
     for index, item in enumerate(result.tasks):
         if index not in displayed_tasks:
-            parts.append(_action(item.title, 8))
+            if item.priority in {"P0", "P1"}:
+                has_undisplayed_urgent = True
+                parts.append(f"⚠️ {_action(item.title, 8)}")
+            else:
+                parts.append(_action(item.title, 8))
             refs.extend(item.evidence_refs)
     for index, item in enumerate(result.decisions):
         if index == 0 and used_decision:
@@ -117,8 +130,10 @@ def _summary_more_line(
         if not text:
             text = "Không có thảo luận ngoài lề quan trọng."
 
+    prefix = "🔴 **CẦN LÀM NGAY (KHÁC):**" if has_undisplayed_urgent else "🟢 **ĐỌC THÊM:**"
+
     return (
-        f"🟢 **ĐỌC THÊM:** {_cut(text, 260)}"
+        f"{prefix} {_cut(text, 260)}"
         f"{_source_suffix(list(dict.fromkeys(refs)), sources, 'Xem tin gốc ↗')}"
     )
 
@@ -173,7 +188,8 @@ def summary_embeds(
     known_indexes = [
         index for index, item in enumerate(result.tasks) if item.priority == "P2"
     ]
-    for index in urgent_indexes[:2]:
+    max_urgent = 3 if len(urgent_indexes) >= 3 else 2
+    for index in urgent_indexes[:max_urgent]:
         detail_lines.append(_summary_task_line(result.tasks[index], sources))
         displayed_tasks.add(index)
 
@@ -194,7 +210,12 @@ def summary_embeds(
         _summary_more_line(result, displayed_tasks, used_decision, sources)
     )
     detail_lines = detail_lines[:4]
-    lines = ["Chi tiết:", *detail_lines]
+    header = (
+        f"📌 {_one_line(result.executive_summary, 220)}"
+        if result.executive_summary.strip()
+        else "Chi tiết:"
+    )
+    lines = [header, *detail_lines]
     lines.extend(
         [
             "",
