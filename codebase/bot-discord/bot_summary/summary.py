@@ -39,6 +39,34 @@ _P1_WORDS = {
     "đổi giờ sát giờ",
     "hết hạn trong ngày",
 }
+_SAME_DAY_WORDS = {
+    "hôm nay",
+    "chiều nay",
+    "tối nay",
+    "trưa nay",
+    "sáng nay",
+    "đêm nay",
+    "trong ngày",
+    "trong buổi",
+    "trong ca học",
+}
+_SPECIFIC_TIME_RE = re.compile(
+    r"\b(?:trước|hạn(?: chót)?|lúc|vào|đến)\s*(?:\d{1,2}[:h]\d{2}|\d{1,2}h|\d{1,2}\s*giờ)\b",
+    re.I,
+)
+
+
+def _has_same_day_urgency(text: str) -> bool:
+    if _SPECIFIC_TIME_RE.search(text):
+        return True
+    if any(word in text for word in _SAME_DAY_WORDS):
+        if re.search(
+            r"\b(?:\d{1,2}[:h]\d{2}|\d{1,2}h|\d{1,2}\s*giờ|nộp|deadline|bắt đầu|hackathon|pitching)\b",
+            text,
+            re.I,
+        ):
+            return True
+    return False
 _NEGATION_WORDS = {
     "không có deadline",
     "ko có deadline",
@@ -181,7 +209,9 @@ def assign_priority(proposed: Priority, evidence_text: str) -> Priority:
         return "P0"
     if proposed == "P0":
         return "P1"
-    if any(word in text for word in _P1_WORDS) and proposed in {"P2", "P3"}:
+    if (
+        any(word in text for word in _P1_WORDS) or _has_same_day_urgency(text)
+    ) and proposed in {"P2", "P3"}:
         return "P1"
     return proposed
 

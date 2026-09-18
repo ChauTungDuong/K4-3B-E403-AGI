@@ -14,7 +14,7 @@ Yêu cầu:
 - Mỗi task/quyết định/câu hỏi phải có evidence_refs tồn tại trong DỮ LIỆU.
 - Phân tầng mức độ ưu tiên:
   + P0: blocker/sự cố khẩn cấp làm gián đoạn toàn bộ lớp học hoặc hệ thống nộp bài (sập server, link thi hỏng, form nộp bài bị lỗi không nộp được).
-  + P1: việc khẩn trong ngày, hạn dưới 12 giờ, đổi giờ/phòng học/link Zoom sát giờ; hoặc cảnh báo chính thức từ BTC/Coach về việc phải nộp đúng repo/form/lớp vì sai sót ảnh hưởng trực tiếp điểm số.
+  + P1: việc khẩn trong ngày hoặc trong buổi học (hạn chót cụ thể như trước 11h, 17:00, 23:59, hôm nay, chiều nay, tối nay); sự kiện/hoạt động bắt buộc diễn ra trong ngày (Mini Hackathon, thi, pitching); đổi giờ/phòng học/link Zoom sát giờ; hoặc cảnh báo chính thức từ BTC/Coach về việc phải nộp đúng repo/form/lớp vì sai sót ảnh hưởng trực tiếp điểm số.
   + P2: tài liệu, slide bài giảng, hướng dẫn vận hành, bài tập/repo thực hành hoặc việc quan trọng nhưng không khẩn.
   + P3: đọc thêm, khảo sát, việc vặt cá nhân (đồ thất lạc, hỏi đáp bên lề hoặc việc có thể trì hoãn).
 - Quy tắc phủ định: Nếu tin nhắn có cụm từ "không có deadline", "không cần gấp", "khi tiện", "tham khảo", "không bắt buộc", "chưa cần xử lý", tuyệt đối KHÔNG gán P1/P2, phải xếp P3.

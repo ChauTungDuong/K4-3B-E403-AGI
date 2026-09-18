@@ -35,6 +35,20 @@ class SummaryTests(unittest.TestCase):
             "P1",
         )
 
+    def test_same_day_urgency_promotes_to_p1(self) -> None:
+        self.assertEqual(
+            assign_priority("P2", "Trước 11h: các nhóm cần đề cử 01 thành viên chấm điểm"),
+            "P1",
+        )
+        self.assertEqual(
+            assign_priority("P2", "chiều nay có chương trình Mini Hackathon AI lúc 17:30"),
+            "P1",
+        )
+        self.assertEqual(
+            assign_priority("P2", "nhớ nộp bài trước 23:59 đêm nay"),
+            "P1",
+        )
+
     def test_duplicate_tasks_are_merged(self) -> None:
         result = merge_duplicate_tasks(
             [
