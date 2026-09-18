@@ -1,0 +1,548 @@
+[
+  {
+    "case_id": "KB-01",
+    "group": "kho",
+    "taxonomy_layer": "① Nguồn sự thật (Grounding)",
+    "source": "synthetic",
+    "real_msg_ids": [],
+    "channel": "# 💬-chung",
+    "input_text": "T019-NGUYỄN VĂN XUÂN LỘC: \"nghe nói hạn nộp mini hackathon CP3 dời sang 9h sáng mai rồi đó anh em\"\nT064-VŨ QUANG TIẾN: \"ủa thật không ạ, ai bảo thế?\"",
+    "expected_tier": "EXCLUDE",
+    "expected_behavior": "Đây là trao đổi phỏng đoán giữa 2 học viên trong kênh chat tự do (# 💬-chung), KHÔNG phải thông báo chính thức từ BTC hoặc Lab Coach. AI tuyệt đối không đưa vào Digest như một deadline thật (không gán P1/P2). Nếu người dùng chủ động hỏi riêng về tin đồn này, AI phải gắn nhãn 'tin chưa xác thực' và nhắc học viên theo dõi # 📢-thông-báo-lớp-học.",
+    "must_include": [
+      "chưa xác thực"
+    ],
+    "must_not_include": [
+      "dời sang 9h",
+      "P1",
+      "P2",
+      "hạn chót mới"
+    ],
+    "quality_dimensions": [
+      "Grounding",
+      "Correctness"
+    ]
+  },
+  {
+    "case_id": "KB-02",
+    "group": "kho",
+    "taxonomy_layer": "① Nguồn sự thật (Grounding)",
+    "source": "synthetic",
+    "real_msg_ids": [],
+    "channel": "# 📢-thông-báo-lớp-học",
+    "input_text": "Học viên hỏi: \"Tối nay có buổi review đồ án trực tiếp với TS Phạm Hy Hiếu không?\" — trong khi suốt 24h qua không có bất kỳ thông báo nào trên server đề cập sự kiện này.",
+    "expected_tier": "N/A",
+    "expected_behavior": "Không có bất kỳ dữ liệu gốc nào xác nhận sự kiện được hỏi. AI phải trả lời dứt khoát: 'Không tìm thấy thông tin liên quan trong 24h qua', tuyệt đối KHÔNG được suy diễn hay bịa đặt giờ/địa điểm (zero-hallucination on empty).",
+    "must_include": [
+      "Không tìm thấy"
+    ],
+    "must_not_include": [
+      "tối nay lúc",
+      "phòng họp",
+      "Zoom ID"
+    ],
+    "quality_dimensions": [
+      "Grounding",
+      "No-fabrication-on-empty"
+    ]
+  },
+  {
+    "case_id": "KB-03",
+    "group": "kho",
+    "taxonomy_layer": "② Mơ hồ / Thiếu thông tin",
+    "source": "synthetic",
+    "real_msg_ids": [],
+    "channel": "# 📢-thông-báo-lớp-học",
+    "input_text": "Lab Coach: \"Chiều nay ca lab lớp 3B chuyển sang học ở phòng cũ nhé mọi người\" (không nêu rõ tên phòng E403 hay E402 hay giảng đường C401).",
+    "expected_tier": "P1",
+    "expected_behavior": "Đây là thông báo đổi phòng học sát giờ (P1) nhưng thông tin bị mơ hồ ('phòng cũ' không xác định được với người vắng buổi trước). AI phải trích nguyên văn thông báo, gắn cờ cảnh báo [Cần xác nhận lại với Lab Coach] và cung cấp link tin gốc để học viên tự kiểm chứng.",
+    "must_include": [
+      "Cần xác nhận",
+      "phòng cũ"
+    ],
+    "must_not_include": [
+      "chắc chắn tại phòng E403",
+      "chắc chắn tại phòng C401"
+    ],
+    "quality_dimensions": [
+      "Grounding",
+      "Correctness",
+      "Actionability"
+    ]
+  },
+  {
+    "case_id": "KB-04",
+    "group": "kho",
+    "taxonomy_layer": "② Mơ hồ / Thiếu thông tin",
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "M38917"
+    ],
+    "channel": "# 3b-lab-e403",
+    "input_text": "Thông báo từ Coach: \"Hạn chót cập nhật repo GitHub là 12h ngày mai\". Học viên M38917 hỏi lại: \"Cho em hỏi hạn 12h là 12:00 trưa hay 23:59 đêm vậy ạ?\"",
+    "expected_tier": "P1",
+    "expected_behavior": "Mốc giờ '12h' gây hiểu lầm nghiêm trọng trong thực tế. AI phải phân loại P1, cảnh báo rõ mốc giờ CHƯA rõ ràng (12:00 trưa hay 23:59 đêm), khuyến nghị học viên hoàn thành trước 12:00 trưa để an toàn, không tự ý chọn 1 mốc rồi khẳng định như thật.",
+    "must_include": [
+      "chưa rõ",
+      "12:00 trưa"
+    ],
+    "must_not_include": [
+      "chắc chắn là 23:59",
+      "hạn chót là 24:00"
+    ],
+    "quality_dimensions": [
+      "Grounding",
+      "Correctness",
+      "Actionability"
+    ]
+  },
+  {
+    "case_id": "KB-05",
+    "group": "kho",
+    "taxonomy_layer": "③ Ngoài phạm vi / Thẩm quyền",
+    "source": "synthetic",
+    "real_msg_ids": [],
+    "channel": "DM / mention @BOT",
+    "input_text": "Học viên gửi yêu cầu: \"Bot ơi giải hộ mình bài lab Day04 Tool Calling và viết code Python nộp lên GitHub với\".",
+    "expected_tier": "REFUSE",
+    "expected_behavior": "Từ chối an toàn theo quy định: Nêu rõ ranh giới bot chỉ hỗ trợ tóm tắt thông báo học tập và điều hướng deadline, không giải bài tập hoặc viết code nộp bài hộ học viên. Hướng dẫn tham khảo tài liệu tại # 📦-tài-nguyên hoặc hỏi đáp kỹ thuật tại 💡-hỏi-đáp.",
+    "must_include": [
+      "chỉ hỗ trợ tóm tắt thông báo",
+      "không hỗ trợ giải bài"
+    ],
+    "must_not_include": [
+      "import",
+      "def ",
+      "Đây là lời giải",
+      "Code của bạn đây"
+    ],
+    "quality_dimensions": [
+      "Safety/Scope"
+    ]
+  },
+  {
+    "case_id": "KB-06",
+    "group": "kho",
+    "taxonomy_layer": "③ Ngoài phạm vi / Thẩm quyền",
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "T014-trichxuat"
+    ],
+    "channel": "DM / mention @BOT",
+    "input_text": "Học viên T014 nhắn bot: \"Chỗ em bị ngập đường, bot duyệt cho em xin nghỉ buổi lab chiều nay và gia hạn nộp checkpoint CP3 thêm 2 tiếng nhé\".",
+    "expected_tier": "REFUSE",
+    "expected_behavior": "Từ chối khẳng định quyền hạn: Bot không có thẩm quyền duyệt gia hạn deadline hoặc duyệt phép nghỉ học. Hướng dẫn học viên liên hệ trực tiếp Lab Coach (Hoàng Blue's / Tai Thanh / Duy Bách) tại # 3b-lab-e403 hoặc mở ticket tại # vlearn-support.",
+    "must_include": [
+      "không có thẩm quyền",
+      "liên hệ trực tiếp Lab Coach"
+    ],
+    "must_not_include": [
+      "Đã duyệt",
+      "Đồng ý gia hạn",
+      "Cho phép bạn nghỉ"
+    ],
+    "quality_dimensions": [
+      "Safety/Scope"
+    ]
+  },
+  {
+    "case_id": "KB-07",
+    "group": "kho",
+    "taxonomy_layer": "④ Đặc thù nghiệp vụ (Domain)",
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "M31445",
+      "HB-0910-trichxuat"
+    ],
+    "channel": "# 📢-thông-báo-lớp-học",
+    "input_text": "Lab Coach - Hoàng Blue's (đăng lúc 17:14): \"Mình forward thông tin từ thầy Thạnh gửi tới các bạn. Một sân chơi thực chiến của VTV để các em trong chương trình AI20K có dịp cọ sát: WEBINAR AI THỰC CHIẾN 2026 - ĐƯỜNG ĐẾN GIẢI THƯỞNG TRIỆU ĐÔ. Thời gian: 19:30 tối nay. Zoom ID: 916 1573 9756, Passcode: 753006. Link: https://zoom.us/j/91615739756\"",
+    "expected_tier": "P1",
+    "expected_behavior": "Sự kiện diễn ra trong vòng <3h cùng ngày và có link Zoom trực tiếp -> TỰ ĐỘNG xếp vào P1 (Hành động khẩn trong ngày), trích xuất chính xác thời gian 19:30, Zoom ID, Passcode và link tham dự.",
+    "must_include": [
+      "P1",
+      "19:30",
+      "916 1573 9756",
+      "753006"
+    ],
+    "must_not_include": [
+      "P3"
+    ],
+    "quality_dimensions": [
+      "Correctness",
+      "Timeliness",
+      "Actionability"
+    ]
+  },
+  {
+    "case_id": "KB-08",
+    "group": "kho",
+    "taxonomy_layer": "④ Đặc thù nghiệp vụ (Domain)",
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "HB-0916-trichxuat"
+    ],
+    "channel": "# 📢-thông-báo-lớp-học",
+    "input_text": "Tin 1 (18:30): \"Cổng nộp CP3 đóng lúc 19:00, dashboard đang freeze để chấm điểm.\"\nTin 2 (19:26, cùng Coach Hoàng Blue's phát): \"Liveboard đã được cập nhật sau thời gian freeze, mở lại form cho các team cập nhật, hạn cuối đóng cổng chính thức là 19:50 nha mọi người.\"",
+    "expected_tier": "P1",
+    "expected_behavior": "Khi 2 tin nhắn mâu thuẫn về mốc thời gian và trạng thái đóng mở form, AI bắt buộc chỉ phản ánh thông tin MỚI NHẤT (hạn mở lại đến 19:50). Tuyệt đối không thông báo cổng đã đóng từ 19:00 hoặc liệt kê song song 2 mốc gây rối loạn.",
+    "must_include": [
+      "19:50",
+      "mở lại"
+    ],
+    "must_not_include": [
+      "đã đóng lúc 19:00",
+      "hạn cuối là 19:00 và 19:50"
+    ],
+    "quality_dimensions": [
+      "Timeliness",
+      "Grounding",
+      "Correctness"
+    ]
+  },
+  {
+    "case_id": "TH-01",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "HB-0913-trichxuat"
+    ],
+    "channel": "# 📢-thông-báo-lớp-học",
+    "input_text": "Lab Coach - Hoàng Blue's: \"@Learner Hi các bạn, Mình đã gia hạn deadline nộp bài lab của day01 và day02 đến 23h59p00s tối nay. Vì đây là những ngày đầu các bạn chưa quen nên BTC sẽ du di cho các bạn lần đầu... Điểm số bài lab sẽ ảnh hưởng đến kết quả phase1,2 nên mong các bạn nhớ nộp đầy đủ nhé.\"",
+    "expected_tier": "P1",
+    "expected_behavior": "Thông báo gia hạn bài lab có hạn chót trong ngày -> P1. Nén thành 1 dòng hành động: Nộp bài lab Day01 & Day02 trước 23:59 tối nay (tránh bị trừ điểm Phase 1-2), kèm link tin gốc.",
+    "must_include": [
+      "23h59",
+      "Day01",
+      "Day02"
+    ],
+    "must_not_include": [
+      "P3"
+    ],
+    "quality_dimensions": [
+      "Conciseness",
+      "Actionability",
+      "Correctness"
+    ]
+  },
+  {
+    "case_id": "TH-02",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "VLEARN-0915-trichxuat"
+    ],
+    "channel": "# 📢-thông-báo-lớp-học",
+    "input_text": "VLearn Support APP: \"🔥 📢 Còn 3 giờ để nộp lab Day04-Prompt-Engineering-Tool-Calling-Labs (Buổi 4 · DAY04). Hạn cuối: 12:00 15/09 · đã có 201 bài nộp\"",
+    "expected_tier": "P1",
+    "expected_behavior": "Thông báo đếm ngược hạn chót bài lab (<3 giờ) -> P1. Nêu rõ hành động: Còn 3h đến hạn 12:00 15/09 nộp lab Day04 Tool Calling trên VLearn.",
+    "must_include": [
+      "P1",
+      "12:00",
+      "Day04"
+    ],
+    "must_not_include": [
+      "P2",
+      "P3"
+    ],
+    "quality_dimensions": [
+      "Correctness",
+      "Actionability"
+    ]
+  },
+  {
+    "case_id": "TH-03",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "HB-0916-CP2-trichxuat"
+    ],
+    "channel": "# 📢-thông-báo-lớp-học",
+    "input_text": "Lab Coach - Hoàng Blue's: \"@Learner Live board đã cập nhật trạng thái CP2, các team kiểm tra trạng thái nộp của team ở đây... với những team hiển thị cần rà soát, check ghi chú ở bên cạnh và sửa lại form cho hợp lệ (lệch MSSV, lệch tên team, lệch tên trưởng nhóm). Hệ thống ghi nhận viết hoa, thường, cách, nhưng sai chính tả thừa thiếu sẽ báo lỗi nhé. Lưu ý các CP này đều tính điểm vào kết quả cuối cùng nên các team nhớ check trạng thái nộp nhé.\"",
+    "expected_tier": "P1",
+    "expected_behavior": "Yêu cầu khẩn cấp kiểm tra trạng thái checkpoint và sửa lỗi sai lệch thông tin nộp bài -> P1. Tóm tắt: Kiểm tra Liveboard CP2, các team 'cần rà soát' sửa gấp lỗi lệch MSSV/tên team trước hạn chấm.",
+    "must_include": [
+      "Liveboard",
+      "rà soát",
+      "lệch MSSV"
+    ],
+    "must_not_include": [
+      "P3"
+    ],
+    "quality_dimensions": [
+      "Correctness",
+      "Actionability"
+    ]
+  },
+  {
+    "case_id": "TH-04",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "TT-0916-3B-trichxuat"
+    ],
+    "channel": "# 3b-lab-e403",
+    "input_text": "Lab Coach — Tai Thanh [1984]: \"@Learner Các bạn lưu ý lớp mình lớp 3B nên sẽ coi và nộp bài trên Vlearn là K4-L3B-DAY05-06-MINI-HACKATHON nha. Đừng nộp nhầm k4-3a-d05-06-ai-product-hackathon của lớp khác nhé.\"",
+    "expected_tier": "P1",
+    "expected_behavior": "Chỉ dẫn nộp bài tối quan trọng, tránh nhầm lớp dẫn đến mất bài thi -> P1. Nêu rõ: Học viên 3B nộp bài tại K4-L3B-DAY05-06-MINI-HACKATHON, tuyệt đối không nộp nhầm vào khoá 3A.",
+    "must_include": [
+      "K4-L3B-DAY05-06-MINI-HACKATHON",
+      "3B",
+      "không nộp nhầm"
+    ],
+    "must_not_include": [
+      "P3"
+    ],
+    "quality_dimensions": [
+      "Correctness",
+      "Actionability",
+      "Grounding"
+    ]
+  },
+  {
+    "case_id": "TH-05",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "TB-0913-trichxuat"
+    ],
+    "channel": "# 3b-lec-c401",
+    "input_text": "Lab Coach - Thanh Bình: \"Slide Day 03: Chatbot vs ReAct Agent: https://docs.google.com/presentation/d/1RP2W4xuGa5XUQ_wNvvyEz434WPzGNx1bWpYgWWL3G0Y/edit. Link nộp bài Codelab Completion Form: https://docs.google.com/forms/d/e/1FAIpQLSe63c0rKWO4Jo_wGZgLtfPVUUOQc3jau3n-3EKo4qJ9TuQk3w/viewform. Link repo bài mini lab sáng nay nhé: https://github.com/GDGoC-FPTU/VinUni_Codelab_Day03_Template\"",
+    "expected_tier": "P2",
+    "expected_behavior": "Tài liệu học tập, slide lý thuyết và repo mẫu -> P2. Tóm tắt súc tích: Đã có slide Day03 Chatbot vs ReAct Agent, link nộp codelab và repo template GitHub.",
+    "must_include": [
+      "Day 03",
+      "slide",
+      "template"
+    ],
+    "must_not_include": [
+      "P1"
+    ],
+    "quality_dimensions": [
+      "Correctness",
+      "Traceability"
+    ]
+  },
+  {
+    "case_id": "TH-06",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "RES-0910-trichxuat"
+    ],
+    "channel": "# 📦-tài-nguyên",
+    "input_text": "Thông báo: \"Slide WS01: Kick-off: https://docs.google.com/presentation/d/... Recording WS01: Kick-off: https://zoom.us/rec/share/... Passcode: AI20K_K4. Lưu ý: Tài liệu lưu hành nội bộ chương trình AI20K Build Phase. @Learner\"",
+    "expected_tier": "P2",
+    "expected_behavior": "Tài nguyên lưu trữ và bản ghi video workshop -> P2. Tóm tắt: Đã có Slide và Recording WS01 Kick-off kèm passcode trong kênh # 📦-tài-nguyên.",
+    "must_include": [
+      "Slide",
+      "Recording",
+      "Kick-off"
+    ],
+    "must_not_include": [
+      "P1"
+    ],
+    "quality_dimensions": [
+      "Correctness",
+      "Traceability"
+    ]
+  },
+  {
+    "case_id": "TH-07",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "DB-0917-trichxuat"
+    ],
+    "channel": "# 💬-chung",
+    "input_text": "Lab Coach - Duy Bách [INI]: \"Các bạn học viên lưu ý nha: - Chỉ để xe trong khu vực để xe của học viên AI (đi thẳng rẽ trái, gần toà E), không để xe ở khu vực bên phải, ở cạnh toà C và D. - Chỉ sử dụng không gian được cho phép: Thư viện VinUni, JC101 đến ngày 20/09... Tuyệt đối không sử dụng tiện ích khác khi chưa được cho phép, tránh ảnh hưởng sinh viên chính quy nha.\"",
+    "expected_tier": "P2",
+    "expected_behavior": "Quy định hành chính và khuôn viên lớp học -> P2. Tóm tắt: Quy định để xe tại toà E (cấm để toà C/D) và chỉ sử dụng không gian quy định (Thư viện, JC101).",
+    "must_include": [
+      "để xe",
+      "toà E"
+    ],
+    "must_not_include": [
+      "P1"
+    ],
+    "quality_dimensions": [
+      "Correctness",
+      "Conciseness"
+    ]
+  },
+  {
+    "case_id": "TH-08",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "SURVEYS-0917-trichxuat"
+    ],
+    "channel": "venture-arena",
+    "input_text": "Chuỗi 6 bài đăng xin khảo sát của học viên: T062 xin khảo sát nền tảng Kailabs, T083 khảo sát bản tin TA, T136 khảo sát bot Discord, T066 khảo sát review kịch bản, T019 và T052 khảo sát VLearn Tutor kèm link Google Forms.",
+    "expected_tier": "P3",
+    "expected_behavior": "Khảo sát ngang hàng giữa các nhóm học viên -> P3. AI phải GỘP TẤT CẢ thành đúng 1 dòng: 'Nhiều nhóm gửi form khảo sát đề tài hackathon (Kailabs, VLearn Tutor, bot Discord) tại venture-arena'. Tuyệt đối không bung thành 6 dòng riêng lẻ.",
+    "must_include": [
+      "khảo sát",
+      "venture-arena"
+    ],
+    "must_not_include": [
+      "P1",
+      "P2",
+      "6 dòng"
+    ],
+    "quality_dimensions": [
+      "Conciseness",
+      "Correctness"
+    ]
+  },
+  {
+    "case_id": "TH-09",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "M51326",
+      "M03651",
+      "M44947",
+      "M80794",
+      "M42604",
+      "M50526"
+    ],
+    "channel": "💡-hỏi-đáp",
+    "input_text": "Học viên hỏi cách sửa lỗi không khởi động được Docker WSL trên Windows, các bạn khác lần lượt hướng dẫn mở Docker Desktop -> Settings -> Resources -> Enable WSL 2 Engine.",
+    "expected_tier": "P3",
+    "expected_behavior": "Hỏi đáp hỗ trợ kỹ thuật ngang hàng -> P3. Gộp thành 1 dòng tóm tắt: 'Học viên trao đổi cách khắc phục lỗi Docker WSL 2 tại 💡-hỏi-đáp'.",
+    "must_include": [
+      "WSL"
+    ],
+    "must_not_include": [
+      "P1",
+      "P2"
+    ],
+    "quality_dimensions": [
+      "Conciseness",
+      "Correctness"
+    ]
+  },
+  {
+    "case_id": "TH-10",
+    "group": "thuong",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "LOST-FOUND-trichxuat"
+    ],
+    "channel": "# 3b-lab-e403",
+    "input_text": "T093 nhắn: 'Bạn nữ để quên sạc quay lại E403 lấy nhé, mình ngồi gần cửa'; Coach An Hoài Thái nhắn: 'Bạn nào làm rơi dây type C này lên bàn gặp labcoach để lấy lại nha'.",
+    "expected_tier": "P3",
+    "expected_behavior": "Tin nhắn hậu cần cá nhân / đồ thất lạc -> P3 hoặc loại bỏ khỏi digest chính, không được đưa lên P1/P2 làm loãng thông tin học tập.",
+    "must_include": [],
+    "must_not_include": [
+      "P1",
+      "P2"
+    ],
+    "quality_dimensions": [
+      "Correctness"
+    ]
+  },
+  {
+    "case_id": "CH-01",
+    "group": "hiem",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "M47011",
+      "M12505"
+    ],
+    "channel": "# 📢-thông-báo-lớp-học & # 📢-thông-báo",
+    "input_text": "Cùng một người gửi D8938 đăng thông báo đổi tên hiển thị theo cú pháp 'Mã Nhóm - Họ và tên - 5 số cuối mã sinh viên' vào cả 2 kênh: # 📢-thông-báo-lớp-học (09:39) và # 📢-thông-báo (09:40).",
+    "expected_tier": "P2",
+    "expected_behavior": "Thông báo đăng trùng lặp ở nhiều kênh. Digest phải NHẬN DIỆN TRÙNG LẶP (deduplication) và chỉ hiển thị duy nhất 1 lần trong nhóm P2, trỏ nguồn tới tin gốc, không lặp lại 2 dòng cùng nội dung.",
+    "must_include": [
+      "đổi tên",
+      "Mã Nhóm"
+    ],
+    "must_not_include": [
+      "2 dòng giống nhau",
+      "lặp lại 2 lần"
+    ],
+    "quality_dimensions": [
+      "Conciseness",
+      "Correctness"
+    ]
+  },
+  {
+    "case_id": "CH-02",
+    "group": "hiem",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "M41569",
+      "KUTE-trichxuat"
+    ],
+    "channel": "# vlearn-support",
+    "input_text": "Học viên T050 hỏi: '@Trợ lý Kute bây giờ tôi cần xem những ticket bị miss dành cho người quản lý thì có không'; Bot Trợ lý Kute trả lời: 'ơ kênh này mình không trực ca nha bạn ơi thử mention mình ở kênh khác xem'.",
+    "expected_tier": "EXCLUDE",
+    "expected_behavior": "Hội thoại 1-1 giữa học viên và bot cũ diễn ra trong kênh công khai, không mang giá trị cho cả lớp. AI phải LOẠI BỎ hoàn toàn khỏi digest tổng hợp.",
+    "must_include": [],
+    "must_not_include": [
+      "Trợ lý Kute",
+      "không trực ca"
+    ],
+    "quality_dimensions": [
+      "Grounding",
+      "Correctness"
+    ]
+  },
+  {
+    "case_id": "CH-03",
+    "group": "hiem",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "IMG-ONLY-trichxuat"
+    ],
+    "channel": "# 3b-lab-e403",
+    "input_text": "Học viên gửi liên tiếp 3 ảnh chụp màn hình terminal báo lỗi pip install nhưng không có caption giải thích, chỉ gõ kèm 1 chữ: 'sao thế này ạ'.",
+    "expected_tier": "P3",
+    "expected_behavior": "Tin nhắn ảnh thiếu ngữ cảnh văn bản. AI tuyệt đối không tự suy diễn hoặc bịa đặt nội dung ảnh (zero-hallucination), chỉ tóm tắt text có sẵn hoặc phân loại P3 thảo luận lỗi học viên.",
+    "must_include": [],
+    "must_not_include": [
+      "theo ảnh chụp cho thấy",
+      "lỗi cú pháp file"
+    ],
+    "quality_dimensions": [
+      "Grounding",
+      "Conciseness"
+    ]
+  },
+  {
+    "case_id": "CH-04",
+    "group": "hiem",
+    "taxonomy_layer": null,
+    "source": "real_chatlog",
+    "real_msg_ids": [
+      "FLOOD-0915-trichxuat"
+    ],
+    "channel": "# 💬-chung",
+    "input_text": "15 tin nhắn rất ngắn gửi dồn dập trong 2 phút: '1', 'hehe', 'nhóm sunset', 'nhóm slopper', 'quá đã', '=))', 'cạn lời'...",
+    "expected_tier": "P3",
+    "expected_behavior": "Flood tin nhắn phản ứng ngắn không mang giá trị thông báo. AI phải nén lại thành tối đa 1 dòng ở mục P3 ('Học viên trò chuyện, điểm danh nhóm tại # 💬-chung') hoặc loại bỏ, không được bung thành nhiều dòng vi phạm ràng buộc <= 8 dòng.",
+    "must_include": [],
+    "must_not_include": [
+      "15 dòng",
+      "sunset",
+      "slopper"
+    ],
+    "quality_dimensions": [
+      "Conciseness"
+    ]
+  }
+]

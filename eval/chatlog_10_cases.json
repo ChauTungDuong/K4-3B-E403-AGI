@@ -1,0 +1,154 @@
+[
+  {
+    "case_id": "TC-CHAT-01",
+    "msg_id": "M98666",
+    "channel": "channel_10",
+    "author": "D7506",
+    "raw_content": "[@BOT] thời gian mở daily standup và kết thúc là khi nào vậy? hôm qua mình gửi sớm daily standup thì không được, chiều nay quá deadline thì nó lại blocked mình.",
+    "ground_truth_priority": "P1",
+    "difficulty_layer": "4_domain_specific",
+    "expected_entities": {
+      "topic": "Daily Standup",
+      "deadline": "23:59",
+      "action_required": true,
+      "risk": "Bi block/tru 10 XP"
+    },
+    "pass_criteria": "AI classifies as P1, extracts deadline 23:59 and cites channel_10"
+  },
+  {
+    "case_id": "TC-CHAT-02",
+    "msg_id": "M19124",
+    "channel": "channel_02",
+    "author": "D9616",
+    "raw_content": "a oi sao deadline ghép đội tự do end sớm vậy a?",
+    "ground_truth_priority": "P1",
+    "difficulty_layer": "4_domain_specific",
+    "expected_entities": {
+      "topic": "Ghép đội tự do",
+      "deadline": "18:00",
+      "action_required": true,
+      "risk": "Bị gán nhóm ngẫu nhiên"
+    },
+    "pass_criteria": "AI classifies as P1 and identifies team formation deadline"
+  },
+  {
+    "case_id": "TC-CHAT-03",
+    "msg_id": "M57630",
+    "channel": "channel_10",
+    "author": "BOT",
+    "raw_content": "Bài Lab trên lớp sẽ được chấm sau khi hết deadline thường là 23:59 cùng ngày nhé",
+    "ground_truth_priority": "P1",
+    "difficulty_layer": "1_grounding",
+    "expected_entities": {
+      "topic": "Hạn nộp bài Lab",
+      "deadline": "23:59 cùng ngày",
+      "action_required": true
+    },
+    "pass_criteria": "AI classifies as P1 and extracts 23:59 deadline without hallucinating dates"
+  },
+  {
+    "case_id": "TC-CHAT-04",
+    "msg_id": "M31445",
+    "channel": "channel_03",
+    "author": "D3694",
+    "raw_content": "Các bạn đừng quên Lịch sáng nay nhé, zoom đã mở nha [@role]",
+    "ground_truth_priority": "P1",
+    "difficulty_layer": "4_domain_specific",
+    "expected_entities": {
+      "topic": "Zoom trực tiếp",
+      "status": "Đang mở",
+      "action_required": true
+    },
+    "pass_criteria": "AI classifies as P1 (Urgent/Happening now) and flags for immediate action"
+  },
+  {
+    "case_id": "TC-CHAT-05",
+    "msg_id": "M60122",
+    "channel": "channel_02",
+    "author": "D3154",
+    "raw_content": "cho mình hỏi cái daily-standup này làm ở đâu vậy nhỉ, làm thế nào",
+    "ground_truth_priority": "P2",
+    "difficulty_layer": "2_ambiguity",
+    "expected_entities": {
+      "topic": "Hướng dẫn Daily Standup",
+      "action_location": "thread nhóm",
+      "action_required": false
+    },
+    "pass_criteria": "AI classifies as P2 (Operational guidance) and points to team thread"
+  },
+  {
+    "case_id": "TC-CHAT-06",
+    "msg_id": "M22827",
+    "channel": "channel_11",
+    "author": "D9617",
+    "raw_content": "Bình thường nhé [HV], ngày bắt đầu ghi nhận XP daily standup là 14/9 nhé",
+    "ground_truth_priority": "P2",
+    "difficulty_layer": "1_grounding",
+    "expected_entities": {
+      "topic": "Ghi nhận XP",
+      "effective_date": "14/09",
+      "action_required": false
+    },
+    "pass_criteria": "AI classifies as P2 and preserves accurate date 14/9"
+  },
+  {
+    "case_id": "TC-CHAT-07",
+    "msg_id": "M69081",
+    "channel": "channel_02",
+    "author": "D2313",
+    "raw_content": "có điểm danh ws không ạ",
+    "ground_truth_priority": "P2",
+    "difficulty_layer": "2_ambiguity",
+    "expected_entities": {
+      "topic": "Điểm danh Workshop",
+      "attendance_method": "QR / Coach",
+      "action_required": false
+    },
+    "pass_criteria": "AI classifies as P2 and clarifies attendance policy"
+  },
+  {
+    "case_id": "TC-CHAT-08",
+    "msg_id": "M17046",
+    "channel": "channel_02",
+    "author": "D7688",
+    "raw_content": "vào trước 30p là được nhé, b liên hệ labcoach hôm đó để điểm danh sau",
+    "ground_truth_priority": "P2",
+    "difficulty_layer": "1_grounding",
+    "expected_entities": {
+      "topic": "Điểm danh bù",
+      "authority": "Lab Coach",
+      "action_required": false
+    },
+    "pass_criteria": "AI classifies as P2 and identifies Lab Coach as point of contact"
+  },
+  {
+    "case_id": "TC-CHAT-09",
+    "msg_id": "M81490",
+    "channel": "channel_02",
+    "author": "D7688",
+    "raw_content": "bạn hỏi labcoach tại phòng nhé, vì slide/bài học thì giảng viên từng buổi sẽ up",
+    "ground_truth_priority": "P3",
+    "difficulty_layer": "3_out_of_scope",
+    "expected_entities": {
+      "topic": "Slide bài giảng",
+      "source": "Giảng viên",
+      "action_required": false
+    },
+    "pass_criteria": "AI classifies as P3 (FYI / Reading) without false urgency"
+  },
+  {
+    "case_id": "TC-CHAT-10",
+    "msg_id": "M55571",
+    "channel": "channel_11",
+    "author": "D5195",
+    "raw_content": "em có test thử nộp daily thì nó hiện như vậy là bình thường hay có lỗi ạa",
+    "ground_truth_priority": "P2",
+    "difficulty_layer": "2_ambiguity",
+    "expected_entities": {
+      "topic": "Kiểm tra lỗi nộp Daily",
+      "confidence": "Low",
+      "action_required": false
+    },
+    "pass_criteria": "AI activates Low-confidence warning and provides jump-to-message link"
+  }
+]

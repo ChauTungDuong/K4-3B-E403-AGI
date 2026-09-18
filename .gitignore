@@ -1,6 +1,24 @@
+# Data packs & Raw Datasets (Bảo mật dữ liệu BTC - Tuyệt đối không push lên Git)
 data/
+data_vin/
+discord_export/
+*.csv
+*.tsv
+*.parquet
+*.jsonl
+
+# Python Virtual Environments & IDE
+.venv/
+venv/
+.idea/
+.vscode/
+__pycache__/
+
+# Environment & Secrets
 *.env
 .env
+
+# Node & OS
 node_modules/
-__pycache__/
 .DS_Store
+
