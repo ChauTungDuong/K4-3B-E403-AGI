@@ -36,8 +36,11 @@ python bot.py
 Quản trị viên dùng:
 
 ```text
+/add-source channel:#thông-báo
 /add-source channel:#backend
+/add-source channel:#thảo-luận
 /setup-output channel:#ai-report
+/group-set name:du-an-a channel:#thông-báo channel_2:#backend channel_3:#thảo-luận
 /set-interval hours:6
 /config
 ```
@@ -46,9 +49,17 @@ Thành viên có quyền đọc kênh nguồn có thể dùng:
 
 ```text
 /summary channel:#thông-báo channel_2:#backend channel_3:#thảo-luận hours:24
+/summary group:du-an-a hours:24 end_hours_ago:12
 /chat input:"Chỉ liệt kê deadline dạng checklist" channel:#thông-báo hours:24
-/trends channel:#backend current_hours:24 baseline_days:7
+/trends group:du-an-a current_hours:24 baseline_days:7
+/help
 ```
+
+`/group-set` tạo mới hoặc thay toàn bộ danh sách của một nhóm, tối đa 6 kênh,
+theo đúng thứ tự ưu tiên đã chọn. Các kênh phải được cho phép trước bằng
+`/add-source`. Dùng `/groups` để xem nhóm và
+`/group-remove` để xóa. `/summary`, `/chat` và `/trends` đều nhận tham số
+`group`; không dùng `group` cùng lúc với các tham số `channel`.
 
 `/summary` nhận tối đa 6 kênh. `channel` có ưu tiên cao nhất, sau đó lần lượt
 đến `channel_6`. Mỗi kênh được hiển thị thành một phần riêng với tiêu đề
@@ -74,6 +85,11 @@ dùng toàn bộ kênh nguồn đã cấu hình, hoặc chọn tối đa 6 kênh
 Câu trả lời `/chat` chỉ hiện riêng cho người gọi, có link về message nguồn và
 vẫn áp dụng quy tắc lấy trọn từng kênh. Yêu cầu làm hộ bài, cấp quyền, duyệt
 nghỉ/gia hạn, tiết lộ danh tính/secret hoặc bỏ qua kiểm chứng sẽ bị từ chối.
+
+Các lệnh phân tích mặc định đọc từ 24 giờ trước đến hiện tại. `hours` của
+`/summary` và `/chat` (hoặc `current_hours` của `/trends`) là mốc bắt đầu;
+`end_hours_ago` là mốc kết thúc. Ví dụ `hours:24 end_hours_ago:12` đọc từ
+24 giờ trước đến 12 giờ trước. Mốc kết thúc phải nhỏ hơn mốc bắt đầu.
 
 Kết quả được gửi vào kênh output đã cấu hình. Digest dùng khung 🔴/🟡/🟢 tối đa 8 dòng; bản tin trend dùng khung 🔥/💡 tối đa 10 dòng. Mỗi mục có channel mention và jump link tới tin gốc khi có bằng chứng hợp lệ. Trạng thái lệnh và lỗi chỉ hiện với người gọi.
 

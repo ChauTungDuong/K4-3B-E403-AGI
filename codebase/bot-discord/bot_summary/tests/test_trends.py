@@ -46,6 +46,28 @@ class TrendTests(unittest.TestCase):
         self.assertLess(metric.hot_score, 0.7)
         self.assertEqual(metric.dominant_author_share, 1)
 
+    def test_historical_window_uses_its_own_end_for_velocity(self) -> None:
+        now = datetime.now(UTC)
+        current = {
+            "MSG_010": message("MSG_010", "USER_01", 13),
+            "MSG_011": message("MSG_011", "USER_02", 14),
+        }
+
+        historical = calculate_metrics(
+            list(current),
+            [],
+            current,
+            {},
+            12,
+            7,
+            now - timedelta(hours=12),
+        )
+        incorrectly_anchored_to_now = calculate_metrics(
+            list(current), [], current, {}, 12, 7, now
+        )
+
+        self.assertGreater(historical.hot_score, incorrectly_anchored_to_now.hot_score)
+
 
 class TrendPipelineTests(unittest.IsolatedAsyncioTestCase):
     async def test_without_baseline_does_not_claim_new_or_rising(self) -> None:

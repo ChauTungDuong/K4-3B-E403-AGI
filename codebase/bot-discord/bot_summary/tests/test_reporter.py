@@ -78,6 +78,19 @@ class SummaryReporterTests(unittest.TestCase):
         self.assertIn("Không tìm thấy việc cần chú ý mới", embed.description)
         self.assertLessEqual(1 + len(embed.description.splitlines()), 8)
 
+    def test_historical_window_uses_explicit_label(self) -> None:
+        result = SummaryResult(executive_summary="Không có task mới.")
+
+        embed = summary_embeds(
+            result,
+            "#chung",
+            hours=12,
+            window_label="24–12 giờ trước",
+        )[0]
+
+        self.assertIn("24–12 giờ trước", embed.title)
+        self.assertNotIn("12 giờ qua", embed.title)
+
 
 class ChatReporterTests(unittest.TestCase):
     def test_chat_answer_has_grounded_source_links(self) -> None:

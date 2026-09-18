@@ -29,8 +29,8 @@ def _action(text: str, max_words: int = 12) -> str:
     return " ".join(words[:max_words]).rstrip(".,;:") + "…"
 
 
-def _window_text(hours: int) -> str:
-    return f"{max(1, hours)} giờ qua"
+def _window_text(hours: int, window_label: str | None = None) -> str:
+    return window_label or f"{max(1, hours)} giờ qua"
 
 
 def _source_suffix(
@@ -128,6 +128,7 @@ def summary_embeds(
     title: str,
     *,
     hours: int = 24,
+    window_label: str | None = None,
     sources: SourceMap | None = None,
 ) -> list[discord.Embed]:
     """Dựng một digest tối đa 8 dòng theo khung hiển thị chuẩn."""
@@ -138,7 +139,8 @@ def summary_embeds(
     suffix = f" · {attention_count} việc cần chú ý" if attention_count else ""
     embed = discord.Embed(
         title=_cut(
-            f"📋 Tóm tắt thông báo — {title} - {_window_text(hours)}{suffix}",
+            f"📋 Tóm tắt thông báo — {title} - "
+            f"{_window_text(hours, window_label)}{suffix}",
             256,
         ),
         color=discord.Color.blurple(),
@@ -148,7 +150,8 @@ def summary_embeds(
         summary = _one_line(result.executive_summary, 500)
         lines = [
             "Chi tiết:",
-            f"🟢 **Không tìm thấy việc cần chú ý mới trong {_window_text(hours)}.**",
+            "🟢 **Không tìm thấy việc cần chú ý mới trong "
+            f"{_window_text(hours, window_label)}.**",
         ]
         if summary:
             lines.append(summary)
@@ -210,6 +213,7 @@ def chat_embeds(
     channel_count: int,
     *,
     hours: int = 24,
+    window_label: str | None = None,
     sources: SourceMap | None = None,
 ) -> list[discord.Embed]:
     """Dựng câu trả lời tùy biến; link nguồn chỉ được nối sau output guard."""
@@ -217,7 +221,7 @@ def chat_embeds(
     embed = discord.Embed(
         title=_cut(
             f"💬 Trả lời theo yêu cầu · {channel_count} kênh · "
-            f"{_window_text(hours)}",
+            f"{_window_text(hours, window_label)}",
             256,
         ),
         description=_cut(result.overview, 1200),
@@ -382,6 +386,7 @@ def trend_embeds(
     title: str,
     *,
     hours: int = 24,
+    window_label: str | None = None,
     sources: SourceMap | None = None,
 ) -> list[discord.Embed]:
     """Dựng bản tin trend tối đa 10 dòng và giữ chi tiết sau nút bấm."""
@@ -391,7 +396,7 @@ def trend_embeds(
     overview = discord.Embed(
         title=_cut(
             f"📊 Phân tích xu hướng thảo luận — {title} - "
-            f"{_window_text(hours)}{topic_suffix}",
+            f"{_window_text(hours, window_label)}{topic_suffix}",
             256,
         ),
         color=discord.Color.orange(),
@@ -401,7 +406,8 @@ def trend_embeds(
         overview.description = "\n".join(
             [
                 "Chi tiết:",
-                f"🟢 **Chưa phát hiện xu hướng nổi bật trong {_window_text(hours)}.**",
+                "🟢 **Chưa phát hiện xu hướng nổi bật trong "
+                f"{_window_text(hours, window_label)}.**",
                 f"• Đã phân tích {result.current_message_count} tin nhắn trong cửa sổ hiện tại.",
                 f"• {_one_line(result.data_quality, 500)}",
                 "",
@@ -474,10 +480,17 @@ async def send_trend_report(
     title: str,
     *,
     hours: int = 24,
+    window_label: str | None = None,
     sources: SourceMap | None = None,
 ) -> None:
     """Gửi tổng quan công khai; chi tiết chỉ hiện sau khi bấm nút."""
-    embeds = trend_embeds(result, title, hours=hours, sources=sources)
+    embeds = trend_embeds(
+        result,
+        title,
+        hours=hours,
+        window_label=window_label,
+        sources=sources,
+    )
     overview, details = embeds[0], embeds[1:]
     view = TrendDetailsView(details) if details else None
     message = await channel.send(

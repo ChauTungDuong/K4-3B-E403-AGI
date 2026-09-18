@@ -20,6 +20,7 @@ class Database:
         self.connection.row_factory = aiosqlite.Row
         await self._conn().executescript(
             """
+            PRAGMA foreign_keys=ON;
             PRAGMA journal_mode=WAL;
 
             CREATE TABLE IF NOT EXISTS guild_config (
@@ -48,6 +49,27 @@ class Database:
 
             CREATE INDEX IF NOT EXISTS idx_trend_snapshots_channel_time
             ON trend_snapshots (guild_id, channel_id, created_at);
+
+            CREATE TABLE IF NOT EXISTS channel_groups (
+                guild_id INTEGER NOT NULL,
+                group_key TEXT NOT NULL,
+                name TEXT NOT NULL,
+                PRIMARY KEY (guild_id, group_key)
+            );
+
+            CREATE TABLE IF NOT EXISTS channel_group_members (
+                guild_id INTEGER NOT NULL,
+                group_key TEXT NOT NULL,
+                channel_id INTEGER NOT NULL,
+                priority_order INTEGER NOT NULL,
+                PRIMARY KEY (guild_id, group_key, channel_id),
+                FOREIGN KEY (guild_id, group_key)
+                    REFERENCES channel_groups (guild_id, group_key)
+                    ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_channel_group_members_order
+            ON channel_group_members (guild_id, group_key, priority_order);
             """
         )
         columns = await (
@@ -127,8 +149,115 @@ class Database:
             "DELETE FROM source_channels WHERE guild_id = ? AND channel_id = ?",
             (guild_id, channel_id),
         )
+        await self._conn().execute(
+            "DELETE FROM channel_group_members WHERE guild_id = ? AND channel_id = ?",
+            (guild_id, channel_id),
+        )
+        await self._conn().execute(
+            """
+            DELETE FROM channel_groups
+            WHERE guild_id = ?
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM channel_group_members AS member
+                  WHERE member.guild_id = channel_groups.guild_id
+                    AND member.group_key = channel_groups.group_key
+              )
+            """,
+            (guild_id,),
+        )
         await self._conn().commit()
         return cursor.rowcount > 0
+
+    async def set_channel_group(
+        self,
+        guild_id: int,
+        name: str,
+        channel_ids: list[int],
+    ) -> None:
+        """Tạo mới hoặc thay toàn bộ kênh của một nhóm, giữ thứ tự ưu tiên."""
+        clean_name = name.strip()
+        group_key = clean_name.casefold()
+        unique_ids = list(dict.fromkeys(channel_ids))
+        if not clean_name or not unique_ids:
+            raise ValueError("Tên nhóm và danh sách kênh không được để trống")
+
+        await self.ensure_guild(guild_id)
+        try:
+            await self._conn().execute(
+                """
+                INSERT INTO channel_groups (guild_id, group_key, name)
+                VALUES (?, ?, ?)
+                ON CONFLICT (guild_id, group_key) DO UPDATE SET name = excluded.name
+                """,
+                (guild_id, group_key, clean_name),
+            )
+            await self._conn().execute(
+                "DELETE FROM channel_group_members WHERE guild_id = ? AND group_key = ?",
+                (guild_id, group_key),
+            )
+            await self._conn().executemany(
+                """
+                INSERT INTO channel_group_members
+                    (guild_id, group_key, channel_id, priority_order)
+                VALUES (?, ?, ?, ?)
+                """,
+                [
+                    (guild_id, group_key, channel_id, priority)
+                    for priority, channel_id in enumerate(unique_ids, 1)
+                ],
+            )
+            await self._conn().commit()
+        except Exception:
+            await self._conn().rollback()
+            raise
+
+    async def remove_channel_group(self, guild_id: int, name: str) -> bool:
+        cursor = await self._conn().execute(
+            "DELETE FROM channel_groups WHERE guild_id = ? AND group_key = ?",
+            (guild_id, name.strip().casefold()),
+        )
+        await self._conn().commit()
+        return cursor.rowcount > 0
+
+    async def get_channel_group(
+        self, guild_id: int, name: str
+    ) -> list[int] | None:
+        group_key = name.strip().casefold()
+        exists = await (
+            await self._conn().execute(
+                "SELECT 1 FROM channel_groups WHERE guild_id = ? AND group_key = ?",
+                (guild_id, group_key),
+            )
+        ).fetchone()
+        if exists is None:
+            return None
+        cursor = await self._conn().execute(
+            """
+            SELECT channel_id
+            FROM channel_group_members
+            WHERE guild_id = ? AND group_key = ?
+            ORDER BY priority_order
+            """,
+            (guild_id, group_key),
+        )
+        return [row["channel_id"] for row in await cursor.fetchall()]
+
+    async def list_channel_groups(self, guild_id: int) -> list[aiosqlite.Row]:
+        cursor = await self._conn().execute(
+            """
+            SELECT channel_groups.name, COUNT(channel_group_members.channel_id) AS channel_count
+            FROM channel_groups
+            LEFT JOIN channel_group_members
+              ON channel_group_members.guild_id = channel_groups.guild_id
+             AND channel_group_members.group_key = channel_groups.group_key
+            WHERE channel_groups.guild_id = ?
+            GROUP BY channel_groups.guild_id, channel_groups.group_key, channel_groups.name
+            ORDER BY channel_groups.name COLLATE NOCASE
+            """,
+            (guild_id,),
+        )
+        return list(await cursor.fetchall())
 
     async def get_config(self, guild_id: int) -> aiosqlite.Row | None:
         cursor = await self._conn().execute(

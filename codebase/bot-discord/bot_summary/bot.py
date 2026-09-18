@@ -18,6 +18,7 @@ from models import Message, SafeMessage
 from privacy import PrivacySanitizer
 from reporter import chat_embeds, send_embeds, send_trend_report, summary_embeds
 from summary import SummaryService
+from time_window import TimeWindow, make_time_window
 from trends import TrendService
 
 
@@ -81,6 +82,7 @@ class SummaryBot(commands.Bot):
         channels: list[discord.TextChannel],
         start: datetime,
         end: datetime,
+        window_label: str | None = None,
     ) -> PrioritizedCollection:
         async with self._lock(guild.id):
             collection = await self.collector.collect_channels_atomic(
@@ -110,6 +112,7 @@ class SummaryBot(commands.Bot):
                         result,
                         f"Ưu tiên {priority} · #{item.channel_name}",
                         hours=hours,
+                        window_label=window_label,
                         sources=sources,
                     )
                 )
@@ -123,6 +126,7 @@ class SummaryBot(commands.Bot):
         start: datetime,
         end: datetime,
         user_input: str,
+        window_label: str | None = None,
     ) -> tuple[PrioritizedCollection, list[discord.Embed]]:
         async with self._lock(guild.id):
             collection = await self.collector.collect_channels_atomic(
@@ -140,6 +144,7 @@ class SummaryBot(commands.Bot):
                 result,
                 len(collection.included),
                 hours=hours,
+                window_label=window_label,
                 sources=sources,
             )
             return collection, embeds
@@ -149,14 +154,16 @@ class SummaryBot(commands.Bot):
         guild: discord.Guild,
         output: discord.TextChannel,
         channel: discord.TextChannel,
-        current_hours: int,
+        current_start: datetime,
+        current_end: datetime,
         baseline_days: int,
+        window_label: str | None = None,
     ) -> int:
         async with self._lock(guild.id):
-            end = datetime.now(UTC)
-            current_start = end - timedelta(hours=current_hours)
             baseline_start = current_start - timedelta(days=baseline_days)
-            current_raw = await self.collector.collect_channel(channel, current_start, end)
+            current_raw = await self.collector.collect_channel(
+                channel, current_start, current_end
+            )
             if not current_raw:
                 return 0
             baseline_raw = await self.collector.collect_channel(
@@ -171,11 +178,15 @@ class SummaryBot(commands.Bot):
             )
             baseline_safe = [item for item in safe if item.created_at < current_start]
             current_safe = [item for item in safe if item.created_at >= current_start]
+            current_hours = max(
+                1, round((current_end - current_start).total_seconds() / 3600)
+            )
             result = await self.trend_service.analyze(
                 current_safe,
                 baseline_safe,
                 current_hours,
                 baseline_days,
+                current_end,
             )
             await self.db.save_trend_snapshot(
                 guild.id, channel.id, current_hours, baseline_days, result
@@ -185,6 +196,7 @@ class SummaryBot(commands.Bot):
                 result,
                 f"#{channel.name}",
                 hours=current_hours,
+                window_label=window_label,
                 sources=sources,
             )
             return len(current_safe)
@@ -220,7 +232,8 @@ class SummaryBot(commands.Bot):
                         guild,
                         output,
                         channel,
-                        int(config["interval_hours"]),
+                        now - timedelta(hours=int(config["interval_hours"])),
+                        now,
                         settings.trend_baseline_days,
                     )
             except Exception as exc:
@@ -293,6 +306,68 @@ def _unique_channels(
             result.append(channel)
             seen.add(channel.id)
     return result
+
+
+def _clean_group_name(name: str) -> str:
+    clean_name = " ".join(name.split())
+    if not clean_name:
+        raise app_commands.CheckFailure("Tên nhóm không được để trống")
+    if len(clean_name) > 50:
+        raise app_commands.CheckFailure("Tên nhóm không được dài quá 50 ký tự")
+    if any(not (character.isalnum() or character in " _-") for character in clean_name):
+        raise app_commands.CheckFailure(
+            "Tên nhóm chỉ được chứa chữ, số, khoảng trắng, dấu gạch ngang hoặc gạch dưới"
+        )
+    return clean_name
+
+
+def _command_time_window(
+    start_hours_ago: int, end_hours_ago: int
+) -> TimeWindow:
+    try:
+        return make_time_window(start_hours_ago, end_hours_ago)
+    except ValueError as exc:
+        raise app_commands.CheckFailure(str(exc)) from exc
+
+
+async def _requested_channels(
+    interaction: discord.Interaction,
+    group: str | None,
+    selected: list[discord.TextChannel | None],
+    *,
+    use_all_sources_by_default: bool = False,
+) -> tuple[discord.Guild, list[discord.TextChannel]]:
+    """Giải quyết lựa chọn nhóm/kênh và áp dụng cùng một kiểm tra quyền."""
+    guild = _guild(interaction)
+    channels = _unique_channels(selected)
+    if group and channels:
+        raise app_commands.CheckFailure(
+            "Chỉ chọn `group` hoặc các tham số `channel`, không dùng đồng thời."
+        )
+
+    if group:
+        clean_name = _clean_group_name(group)
+        channel_ids = await bot.db.get_channel_group(guild.id, clean_name)
+        if channel_ids is None:
+            raise app_commands.CheckFailure(
+                f"Không tìm thấy nhóm **{clean_name}**. Dùng /groups để xem danh sách."
+            )
+        channels = _text_channels(guild, channel_ids)
+        if len(channels) != len(channel_ids):
+            raise app_commands.CheckFailure(
+                f"Nhóm **{clean_name}** có kênh không còn tồn tại. "
+                "Quản trị viên hãy cập nhật lại bằng /group-set."
+            )
+    elif not channels and use_all_sources_by_default:
+        channels = _text_channels(guild, await bot.db.get_sources(guild.id))
+
+    if not channels:
+        raise app_commands.CheckFailure(
+            "Cần chọn một nhóm hoặc ít nhất một kênh nguồn."
+        )
+    for channel in channels:
+        await _check_source(interaction, channel)
+    return guild, channels
 
 
 def _skipped_channels_notice(skipped: list[SkippedChannel]) -> str:
@@ -406,6 +481,88 @@ async def remove_source(
     await interaction.response.send_message(message, ephemeral=True)
 
 
+@bot.tree.command(
+    name="group-set",
+    description="Tạo hoặc cập nhật một nhóm gồm tối đa 6 kênh nguồn",
+)
+@app_commands.describe(
+    name="Tên nhóm dùng trong summary, chat hoặc trends",
+    channel="Kênh ưu tiên 1 (cao nhất)",
+    channel_2="Kênh ưu tiên 2",
+    channel_3="Kênh ưu tiên 3",
+    channel_4="Kênh ưu tiên 4",
+    channel_5="Kênh ưu tiên 5",
+    channel_6="Kênh ưu tiên 6",
+)
+@admin_permission
+@admin_check
+async def set_group(
+    interaction: discord.Interaction,
+    name: app_commands.Range[str, 1, 50],
+    channel: discord.TextChannel,
+    channel_2: discord.TextChannel | None = None,
+    channel_3: discord.TextChannel | None = None,
+    channel_4: discord.TextChannel | None = None,
+    channel_5: discord.TextChannel | None = None,
+    channel_6: discord.TextChannel | None = None,
+) -> None:
+    clean_name = _clean_group_name(str(name))
+    guild, channels = await _requested_channels(
+        interaction,
+        None,
+        [channel, channel_2, channel_3, channel_4, channel_5, channel_6],
+    )
+    await bot.db.set_channel_group(
+        guild.id, clean_name, [selected.id for selected in channels]
+    )
+    mentions = ", ".join(selected.mention for selected in channels)
+    await interaction.response.send_message(
+        f"Đã lưu nhóm **{clean_name}** theo thứ tự: {mentions}.",
+        ephemeral=True,
+        allowed_mentions=discord.AllowedMentions.none(),
+    )
+
+
+@bot.tree.command(name="group-remove", description="Xóa một nhóm kênh đã lưu")
+@app_commands.describe(name="Tên nhóm cần xóa")
+@admin_permission
+@admin_check
+async def remove_group(
+    interaction: discord.Interaction,
+    name: app_commands.Range[str, 1, 50],
+) -> None:
+    guild = _guild(interaction)
+    clean_name = _clean_group_name(str(name))
+    removed = await bot.db.remove_channel_group(guild.id, clean_name)
+    message = (
+        f"Đã xóa nhóm **{clean_name}**."
+        if removed
+        else f"Không tìm thấy nhóm **{clean_name}**."
+    )
+    await interaction.response.send_message(message, ephemeral=True)
+
+
+@bot.tree.command(name="groups", description="Xem các nhóm kênh đã lưu")
+async def list_groups(interaction: discord.Interaction) -> None:
+    guild = _guild(interaction)
+    groups = await bot.db.list_channel_groups(guild.id)
+    if groups:
+        lines = [
+            f"• **{row['name']}** — {row['channel_count']} kênh"
+            for row in groups[:25]
+        ]
+        if len(groups) > 25:
+            lines.append(f"• …và {len(groups) - 25} nhóm khác")
+        message = "**Nhóm kênh trong server:**\n" + "\n".join(lines)
+    else:
+        message = "Chưa có nhóm kênh. Quản trị viên có thể tạo bằng /group-set."
+    await interaction.response.send_message(
+        message,
+        ephemeral=True,
+        allowed_mentions=discord.AllowedMentions.none(),
+    )
+
+
 @bot.tree.command(name="set-interval", description="Đặt chu kỳ báo cáo tự động")
 @admin_permission
 @admin_check
@@ -427,6 +584,7 @@ async def show_config(interaction: discord.Interaction) -> None:
     guild = _guild(interaction)
     config = await bot.db.get_config(guild.id)
     source_ids = await bot.db.get_sources(guild.id)
+    group_rows = await bot.db.list_channel_groups(guild.id)
     output = (
         f"<#{config['output_channel_id']}>"
         if config and config["output_channel_id"]
@@ -434,8 +592,12 @@ async def show_config(interaction: discord.Interaction) -> None:
     )
     interval = config["interval_hours"] if config else 6
     sources = ", ".join(f"<#{item}>" for item in source_ids) or "Chưa có"
+    groups = ", ".join(row["name"] for row in group_rows[:20]) or "Chưa có"
+    if len(group_rows) > 20:
+        groups += f", … (+{len(group_rows) - 20})"
     await interaction.response.send_message(
         f"**Kênh nguồn (ưu tiên cao → thấp):** {sources}\n"
+        f"**Nhóm kênh:** {groups}\n"
         f"**Kênh báo cáo:** {output}\n"
         f"**Chu kỳ:** {interval} giờ",
         ephemeral=True,
@@ -445,45 +607,47 @@ async def show_config(interaction: discord.Interaction) -> None:
 
 @bot.tree.command(
     name="summary",
-    description="Tóm tắt tối đa 6 kênh theo thứ tự ưu tiên",
+    description="Tóm tắt một nhóm hoặc tối đa 6 kênh theo thứ tự ưu tiên",
 )
 @app_commands.describe(
-    channel="Kênh ưu tiên 1 (cao nhất)",
+    channel="Kênh ưu tiên 1; bỏ trống nếu dùng group",
+    group="Tên nhóm kênh đã lưu bằng /group-set",
     channel_2="Kênh ưu tiên 2",
     channel_3="Kênh ưu tiên 3",
     channel_4="Kênh ưu tiên 4",
     channel_5="Kênh ưu tiên 5",
     channel_6="Kênh ưu tiên 6",
-    hours="Số giờ cần đọc",
+    hours="Mốc bắt đầu: số giờ trước (mặc định 24)",
+    end_hours_ago="Mốc kết thúc: số giờ trước (mặc định 0 = hiện tại)",
 )
 @app_commands.checks.cooldown(1, 60, key=lambda item: (item.guild_id, item.user.id))
 async def summary_command(
     interaction: discord.Interaction,
-    channel: discord.TextChannel,
+    channel: discord.TextChannel | None = None,
+    group: str | None = None,
     channel_2: discord.TextChannel | None = None,
     channel_3: discord.TextChannel | None = None,
     channel_4: discord.TextChannel | None = None,
     channel_5: discord.TextChannel | None = None,
     channel_6: discord.TextChannel | None = None,
     hours: app_commands.Range[int, 1, 168] = settings.summary_default_hours,
+    end_hours_ago: app_commands.Range[int, 0, 167] = 0,
 ) -> None:
-    channels = _unique_channels(
-        [channel, channel_2, channel_3, channel_4, channel_5, channel_6]
+    guild, channels = await _requested_channels(
+        interaction,
+        group,
+        [channel, channel_2, channel_3, channel_4, channel_5, channel_6],
     )
-    guild: discord.Guild | None = None
-    for channel in channels:
-        guild = await _check_source(interaction, channel)
-    if guild is None:
-        raise app_commands.CheckFailure("Cần chọn ít nhất một kênh")
     _, output = await _output(guild)
+    window = _command_time_window(int(hours), int(end_hours_ago))
     await interaction.response.defer(ephemeral=True, thinking=True)
-    end = datetime.now(UTC)
     run = await bot.run_summary(
         guild,
         output,
         channels,
-        end - timedelta(hours=int(hours)),
-        end,
+        window.start,
+        window.end,
+        window.label,
     )
     if run.message_count:
         message = (
@@ -509,47 +673,46 @@ async def summary_command(
 )
 @app_commands.describe(
     input="Ví dụ: Chỉ liệt kê deadline dưới dạng checklist",
-    channel="Kênh ưu tiên 1; bỏ trống để dùng mọi kênh nguồn",
+    channel="Kênh ưu tiên 1; bỏ trống để dùng group hoặc mọi kênh nguồn",
+    group="Tên nhóm kênh đã lưu bằng /group-set",
     channel_2="Kênh ưu tiên 2",
     channel_3="Kênh ưu tiên 3",
     channel_4="Kênh ưu tiên 4",
     channel_5="Kênh ưu tiên 5",
     channel_6="Kênh ưu tiên 6",
-    hours="Số giờ cần đọc",
+    hours="Mốc bắt đầu: số giờ trước (mặc định 24)",
+    end_hours_ago="Mốc kết thúc: số giờ trước (mặc định 0 = hiện tại)",
 )
 @app_commands.checks.cooldown(1, 30, key=lambda item: (item.guild_id, item.user.id))
 async def chat_command(
     interaction: discord.Interaction,
     input: app_commands.Range[str, 1, 1000],
     channel: discord.TextChannel | None = None,
+    group: str | None = None,
     channel_2: discord.TextChannel | None = None,
     channel_3: discord.TextChannel | None = None,
     channel_4: discord.TextChannel | None = None,
     channel_5: discord.TextChannel | None = None,
     channel_6: discord.TextChannel | None = None,
     hours: app_commands.Range[int, 1, 168] = settings.summary_default_hours,
+    end_hours_ago: app_commands.Range[int, 0, 167] = 0,
 ) -> None:
-    guild = _guild(interaction)
-    channels = _unique_channels(
-        [channel, channel_2, channel_3, channel_4, channel_5, channel_6]
+    guild, channels = await _requested_channels(
+        interaction,
+        group,
+        [channel, channel_2, channel_3, channel_4, channel_5, channel_6],
+        use_all_sources_by_default=True,
     )
-    if not channels:
-        channels = _text_channels(guild, await bot.db.get_sources(guild.id))
-    if not channels:
-        raise app_commands.CheckFailure(
-            "Chưa có kênh nguồn. Hãy chọn channel hoặc nhờ quản trị viên dùng /add-source."
-        )
-    for selected_channel in channels:
-        await _check_source(interaction, selected_channel)
+    window = _command_time_window(int(hours), int(end_hours_ago))
 
     await interaction.response.defer(ephemeral=True, thinking=True)
-    end = datetime.now(UTC)
     run, embeds = await bot.run_chat(
         guild,
         channels,
-        end - timedelta(hours=int(hours)),
-        end,
+        window.start,
+        window.end,
         str(input),
+        window.label,
     )
 
     notice = _skipped_channels_notice(run.skipped) if run.skipped else None
@@ -572,31 +735,123 @@ async def chat_command(
     )
 
 
-@bot.tree.command(name="trends", description="Phân tích xu hướng của một kênh")
+@bot.tree.command(name="trends", description="Phân tích xu hướng của một nhóm hoặc một kênh")
 @app_commands.describe(
-    channel="Kênh cần phân tích",
-    current_hours="Cửa sổ hiện tại",
+    channel="Kênh cần phân tích; bỏ trống nếu dùng group",
+    group="Tên nhóm kênh đã lưu bằng /group-set",
+    current_hours="Mốc bắt đầu: số giờ trước (mặc định 24)",
+    end_hours_ago="Mốc kết thúc: số giờ trước (mặc định 0 = hiện tại)",
     baseline_days="Số ngày dùng làm baseline",
 )
 @app_commands.checks.cooldown(1, 60, key=lambda item: (item.guild_id, item.user.id))
 async def trends_command(
     interaction: discord.Interaction,
-    channel: discord.TextChannel,
+    channel: discord.TextChannel | None = None,
+    group: str | None = None,
     current_hours: app_commands.Range[int, 1, 168] = settings.trend_current_hours,
+    end_hours_ago: app_commands.Range[int, 0, 167] = 0,
     baseline_days: app_commands.Range[int, 1, 30] = settings.trend_baseline_days,
 ) -> None:
-    guild = await _check_source(interaction, channel)
+    guild, channels = await _requested_channels(interaction, group, [channel])
     _, output = await _output(guild)
+    window = _command_time_window(int(current_hours), int(end_hours_ago))
     await interaction.response.defer(ephemeral=True, thinking=True)
-    count = await bot.run_trends(
-        guild, output, channel, int(current_hours), int(baseline_days)
-    )
+    count = 0
+    channels_with_data = 0
+    for selected_channel in channels:
+        channel_count = await bot.run_trends(
+            guild,
+            output,
+            selected_channel,
+            window.start,
+            window.end,
+            int(baseline_days),
+            window.label,
+        )
+        count += channel_count
+        channels_with_data += int(channel_count > 0)
     message = (
-        f"Đã phân tích **{count}** tin hiện tại và gửi vào {output.mention}."
+        f"Đã phân tích **{count}** tin từ **{channels_with_data} kênh** "
+        f"và gửi vào {output.mention}."
         if count
-        else "Không có tin nhắn trong cửa sổ hiện tại."
+        else "Không có tin nhắn trong khoảng thời gian đã chọn."
     )
     await interaction.followup.send(message, ephemeral=True)
+
+
+@bot.tree.command(name="help", description="Xem hướng dẫn sử dụng các lệnh của bot")
+async def help_command(interaction: discord.Interaction) -> None:
+    embed = discord.Embed(
+        title="Hướng dẫn Discord Summary Bot",
+        description=(
+            "Các kết quả chỉ dùng những kênh nguồn mà quản trị viên đã cho phép. "
+            "Bạn cũng phải có quyền đọc mọi kênh được chọn."
+        ),
+        color=discord.Color.blurple(),
+    )
+    embed.add_field(
+        name="Lệnh phân tích",
+        value=(
+            "`/summary` — tóm tắt một nhóm hoặc tối đa 6 kênh.\n"
+            "`/chat` — hỏi dữ liệu trong các kênh bằng ngôn ngữ tự nhiên.\n"
+            "`/trends` — phân tích xu hướng cho một kênh hoặc cả nhóm."
+        ),
+        inline=False,
+    )
+    embed.add_field(
+        name="Nhóm kênh",
+        value=(
+            "Quản trị viên dùng `/group-set` để tạo/cập nhật nhóm và "
+            "`/group-remove` để xóa. Dùng `/groups` để xem danh sách.\n"
+            "Ví dụ: `/summary group:du-an-a`. Không chọn `group` cùng lúc với `channel`."
+        ),
+        inline=False,
+    )
+    embed.add_field(
+        name="Khoảng thời gian",
+        value=(
+            "`hours`/`current_hours` là mốc bắt đầu; `end_hours_ago` là mốc kết thúc.\n"
+            "Ví dụ `hours:24 end_hours_ago:12` đọc từ 24 giờ trước đến 12 giờ trước. "
+            "Bỏ các tham số này sẽ dùng 24 giờ trước đến hiện tại."
+        ),
+        inline=False,
+    )
+    embed.add_field(
+        name="Lệnh quản trị",
+        value=(
+            "`/add-source`, `/remove-source`, `/setup-output`, `/set-interval`, "
+            "`/config`, `/group-set`, `/group-remove`."
+        ),
+        inline=False,
+    )
+    await interaction.response.send_message(
+        embed=embed,
+        ephemeral=True,
+        allowed_mentions=discord.AllowedMentions.none(),
+    )
+
+
+@set_group.autocomplete("name")
+@remove_group.autocomplete("name")
+@summary_command.autocomplete("group")
+@chat_command.autocomplete("group")
+@trends_command.autocomplete("group")
+async def group_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> list[app_commands.Choice[str]]:
+    if interaction.guild_id is None:
+        return []
+    search = current.strip().casefold()
+    groups = await bot.db.list_channel_groups(interaction.guild_id)
+    return [
+        app_commands.Choice(
+            name=f"{row['name']} ({row['channel_count']} kênh)",
+            value=row["name"],
+        )
+        for row in groups
+        if search in row["name"].casefold()
+    ][:25]
 
 
 @bot.tree.error

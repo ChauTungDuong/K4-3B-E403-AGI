@@ -48,6 +48,7 @@ class TrendService:
         baseline: list[SafeMessage],
         current_hours: int,
         baseline_days: int,
+        current_end: datetime | None = None,
     ) -> TrendResult:
         if not current:
             return _empty_result(len(baseline))
@@ -81,6 +82,7 @@ class TrendService:
                 baseline_by_ref,
                 current_hours,
                 baseline_days,
+                current_end,
             )
             classification = self._classify(metrics, bool(baseline))
             confidence = min(
@@ -151,6 +153,7 @@ def calculate_metrics(
     baseline_by_ref: dict[str, SafeMessage],
     current_hours: int,
     baseline_days: int,
+    current_end: datetime | None = None,
 ) -> TrendMetrics:
     current = [current_by_ref[ref] for ref in current_refs]
     baseline = [baseline_by_ref[ref] for ref in baseline_refs]
@@ -166,7 +169,8 @@ def calculate_metrics(
     growth_rate = None if baseline_count == 0 else (current_count - expected) / max(expected, 1)
     growth_score = _clamp((current_count - expected) / max(expected * 2, 1))
 
-    midpoint = datetime.now(UTC) - timedelta(hours=current_hours / 2)
+    window_end = current_end or datetime.now(UTC)
+    midpoint = window_end - timedelta(hours=current_hours / 2)
     recent = sum(item.created_at >= midpoint for item in current)
     older = current_count - recent
     velocity_score = _clamp((recent - older) / max(current_count, 1))

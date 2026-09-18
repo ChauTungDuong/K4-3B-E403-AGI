@@ -50,6 +50,39 @@ class SourcePriorityTests(unittest.IsolatedAsyncioTestCase):
             finally:
                 await migrated.close()
 
+    async def test_channel_group_is_case_insensitive_and_keeps_priority(self) -> None:
+        for channel_id in (30, 10, 20):
+            await self.database.add_source(1, channel_id)
+
+        await self.database.set_channel_group(1, "Dự Án A", [30, 10, 20, 10])
+
+        self.assertEqual(
+            await self.database.get_channel_group(1, "dự án a"),
+            [30, 10, 20],
+        )
+        groups = await self.database.list_channel_groups(1)
+        self.assertEqual(
+            [(row["name"], row["channel_count"]) for row in groups],
+            [("Dự Án A", 3)],
+        )
+
+        await self.database.set_channel_group(1, "Dự án A", [20, 30])
+        self.assertEqual(
+            await self.database.get_channel_group(1, "DỰ ÁN A"),
+            [20, 30],
+        )
+
+    async def test_removing_source_updates_and_removes_empty_group(self) -> None:
+        await self.database.add_source(1, 10)
+        await self.database.add_source(1, 20)
+        await self.database.set_channel_group(1, "backend", [10, 20])
+
+        await self.database.remove_source(1, 10)
+        self.assertEqual(await self.database.get_channel_group(1, "backend"), [20])
+
+        await self.database.remove_source(1, 20)
+        self.assertIsNone(await self.database.get_channel_group(1, "backend"))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -23,6 +23,7 @@ discord-gemini-bot/
 ├── chat.py                   # Yêu cầu tự nhiên có grounding và giới hạn phạm vi
 ├── trends.py                 # MODULE 2: phân tích xu hướng của một kênh
 ├── reporter.py               # Chuyển kết quả thành Discord embeds an toàn
+├── time_window.py            # Kiểm tra và tạo khoảng thời gian tương đối
 │
 ├── prompts/
 │   ├── summary.txt           # Chỉ dẫn trích xuất summary/task
@@ -276,7 +277,7 @@ class TopicTrend(BaseModel):
 
 ## 5. Luồng các lệnh chính
 
-### `/summary channel ... channel_6 hours`
+### `/summary group|channel ... channel_6 hours end_hours_ago`
 
 ```text
 bot.py
@@ -287,7 +288,7 @@ bot.py
   → reporter.send_summary(từng phần)
 ```
 
-### `/chat input channel ... channel_6 hours`
+### `/chat input group|channel ... channel_6 hours end_hours_ago`
 
 ```text
 bot.py
@@ -298,7 +299,7 @@ bot.py
   → trả embed có jump link dưới dạng ephemeral
 ```
 
-### `/trends channel current_hours baseline_days`
+### `/trends group|channel current_hours end_hours_ago baseline_days`
 
 ```text
 bot.py
