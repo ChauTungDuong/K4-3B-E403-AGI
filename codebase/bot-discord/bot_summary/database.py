@@ -32,6 +32,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS source_channels (
                 guild_id INTEGER NOT NULL,
                 channel_id INTEGER NOT NULL,
+                priority_order INTEGER,
                 PRIMARY KEY (guild_id, channel_id)
             );
 
@@ -47,6 +48,21 @@ class Database:
 
             CREATE INDEX IF NOT EXISTS idx_trend_snapshots_channel_time
             ON trend_snapshots (guild_id, channel_id, created_at);
+            """
+        )
+        columns = await (
+            await self._conn().execute("PRAGMA table_info(source_channels)")
+        ).fetchall()
+        if "priority_order" not in {row[1] for row in columns}:
+            await self._conn().execute(
+                "ALTER TABLE source_channels ADD COLUMN priority_order INTEGER"
+            )
+        # CSDL cũ không có thứ tự: rowid là xấp xỉ tốt nhất cho thứ tự đã thêm.
+        await self._conn().execute(
+            """
+            UPDATE source_channels
+            SET priority_order = rowid
+            WHERE priority_order IS NULL
             """
         )
         await self._conn().commit()
@@ -87,8 +103,21 @@ class Database:
     async def add_source(self, guild_id: int, channel_id: int) -> bool:
         await self.ensure_guild(guild_id)
         cursor = await self._conn().execute(
-            "INSERT OR IGNORE INTO source_channels (guild_id, channel_id) VALUES (?, ?)",
-            (guild_id, channel_id),
+            """
+            INSERT OR IGNORE INTO source_channels
+                (guild_id, channel_id, priority_order)
+            VALUES (
+                ?,
+                ?,
+                COALESCE(
+                    (SELECT MAX(priority_order) + 1
+                     FROM source_channels
+                     WHERE guild_id = ?),
+                    1
+                )
+            )
+            """,
+            (guild_id, channel_id, guild_id),
         )
         await self._conn().commit()
         return cursor.rowcount > 0
@@ -109,7 +138,12 @@ class Database:
 
     async def get_sources(self, guild_id: int) -> list[int]:
         cursor = await self._conn().execute(
-            "SELECT channel_id FROM source_channels WHERE guild_id = ? ORDER BY channel_id",
+            """
+            SELECT channel_id
+            FROM source_channels
+            WHERE guild_id = ?
+            ORDER BY priority_order, rowid
+            """,
             (guild_id,),
         )
         return [row["channel_id"] for row in await cursor.fetchall()]

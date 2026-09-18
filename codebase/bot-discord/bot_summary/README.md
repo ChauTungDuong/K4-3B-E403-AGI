@@ -45,9 +45,20 @@ Quản trị viên dùng:
 Thành viên có quyền đọc kênh nguồn có thể dùng:
 
 ```text
-/summary channel:#backend hours:24
+/summary channel:#thông-báo channel_2:#backend channel_3:#thảo-luận hours:24
 /trends channel:#backend current_hours:24 baseline_days:7
 ```
+
+`/summary` nhận tối đa 6 kênh. `channel` có ưu tiên cao nhất, sau đó lần lượt
+đến `channel_6`. Mỗi kênh được hiển thị thành một phần riêng với tiêu đề
+`Ưu tiên N · #tên-kênh`.
+
+Bot chỉ đưa một kênh vào bản tóm tắt khi đã lấy được **toàn bộ** tin hợp lệ
+trong cửa sổ thời gian. Nếu context còn lại chỉ chứa được một phần của kênh kế
+tiếp, bot bỏ nguyên kênh đó và mọi kênh ưu tiên thấp hơn, chỉ tóm tắt các kênh
+đã lấy trọn vẹn, rồi báo rõ danh sách bị bỏ cho người gọi. Báo cáo định kỳ dùng
+thứ tự các kênh đã được thêm bằng `/add-source`; xóa rồi thêm lại một kênh sẽ
+đưa kênh đó xuống cuối thứ tự ưu tiên.
 
 Kết quả được gửi vào kênh output đã cấu hình. Digest dùng khung 🔴/🟡/🟢 tối đa 8 dòng; bản tin trend dùng khung 🔥/💡 tối đa 10 dòng. Mỗi mục có channel mention và jump link tới tin gốc khi có bằng chứng hợp lệ. Trạng thái lệnh và lỗi chỉ hiện với người gọi.
 

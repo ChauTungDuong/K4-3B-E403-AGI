@@ -92,6 +92,13 @@ Bảng ánh xạ giữa ID thật và `USER_xx`/`MSG_xxx` chỉ tồn tại tron
 
 ## 3. Luồng `/summary`
 
+`/summary` nhận `channel`, rồi `channel_2` đến `channel_6` theo thứ tự ưu tiên.
+Collector đọc từng kênh theo thứ tự này và chỉ nhận khi toàn bộ nội dung hợp lệ
+trong cửa sổ thời gian nằm trọn trong ngân sách message/ký tự. Tại kênh đầu
+tiên không vừa, bot bỏ nguyên kênh đó cùng mọi kênh đứng sau; tuyệt đối không
+gửi một phần kênh sang Gemini. Mỗi kênh đã nhận được phân tích và hiển thị thành một phần riêng,
+sau đó người gọi nhận thông báo về danh sách kênh bị bỏ (nếu có).
+
 ```mermaid
 flowchart LR
     A["SafeMessage[]"] --> B["Gemini<br/>SummaryDraft"]

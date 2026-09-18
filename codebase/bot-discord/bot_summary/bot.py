@@ -9,7 +9,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from collector import DiscordCollector
+from collector import DiscordCollector, PrioritizedCollection, SkippedChannel
 from config import settings
 from database import Database
 from gemini import GeminiClient
@@ -79,21 +79,40 @@ class SummaryBot(commands.Bot):
         channels: list[discord.TextChannel],
         start: datetime,
         end: datetime,
-        title: str,
-    ) -> int:
+    ) -> PrioritizedCollection:
         async with self._lock(guild.id):
-            raw = await self.collector.collect_channels(channels, start, end)
+            collection = await self.collector.collect_channels_atomic(
+                channels, start, end
+            )
+            raw = collection.messages
             if not raw:
-                return 0
+                return collection
             safe = PrivacySanitizer().sanitize(raw)
             sources = _report_sources(guild.id, raw, safe)
-            result = await self.summary_service.analyze(safe)
+            safe_by_channel: dict[int, list[SafeMessage]] = {
+                item.channel_id: [] for item in collection.included
+            }
+            ordered_raw = sorted(raw, key=lambda item: item.created_at)
+            for raw_item, safe_item in zip(ordered_raw, safe, strict=True):
+                safe_by_channel[raw_item.channel_id].append(safe_item)
+
             hours = max(1, round((end - start).total_seconds() / 3600))
-            await send_embeds(
-                output,
-                summary_embeds(result, title, hours=hours, sources=sources),
-            )
-            return len(raw)
+            embeds: list[discord.Embed] = []
+            for priority, item in enumerate(collection.included, 1):
+                channel_messages = safe_by_channel[item.channel_id]
+                if not channel_messages:
+                    continue
+                result = await self.summary_service.analyze(channel_messages)
+                embeds.extend(
+                    summary_embeds(
+                        result,
+                        f"Ưu tiên {priority} · #{item.channel_name}",
+                        hours=hours,
+                        sources=sources,
+                    )
+                )
+            await send_embeds(output, embeds)
+            return collection
 
     async def run_trends(
         self,
@@ -158,9 +177,14 @@ class SummaryBot(commands.Bot):
             if last_run.tzinfo is None:
                 last_run = last_run.replace(tzinfo=UTC)
             try:
-                await self.run_summary(
-                    guild, output, channels, last_run, now, "Báo cáo định kỳ"
+                summary_run = await self.run_summary(
+                    guild, output, channels, last_run, now
                 )
+                if summary_run.skipped:
+                    await output.send(
+                        _skipped_channels_notice(summary_run.skipped),
+                        allowed_mentions=discord.AllowedMentions.none(),
+                    )
                 for channel in channels:
                     await self.run_trends(
                         guild,
@@ -226,6 +250,35 @@ def _text_channels(
         for channel_id in channel_ids
         if isinstance((channel := guild.get_channel(channel_id)), discord.TextChannel)
     ]
+
+
+def _unique_channels(
+    channels: list[discord.TextChannel | None],
+) -> list[discord.TextChannel]:
+    """Bỏ lựa chọn trống/trùng nhưng giữ nguyên thứ tự ưu tiên người dùng."""
+    result: list[discord.TextChannel] = []
+    seen: set[int] = set()
+    for channel in channels:
+        if channel is not None and channel.id not in seen:
+            result.append(channel)
+            seen.add(channel.id)
+    return result
+
+
+def _skipped_channels_notice(skipped: list[SkippedChannel]) -> str:
+    channels = ", ".join(f"<#{item.channel_id}>" for item in skipped)
+    first_reason = skipped[0].reason
+    if first_reason == "context_budget":
+        reason = "context còn lại không đủ chứa trọn kênh ưu tiên kế tiếp"
+    elif first_reason in {"channel_message_limit", "channel_character_limit"}:
+        reason = "kênh ưu tiên kế tiếp vượt giới hạn an toàn đã cấu hình"
+    else:
+        reason = "một kênh ưu tiên cao hơn không thể được lấy đầy đủ"
+    return (
+        f"⚠️ Đã bỏ nguyên kênh {channels}: {reason}. "
+        "Bot không dùng dữ liệu cắt dở; các kênh đứng sau cũng được bỏ để giữ "
+        "đúng thứ tự ưu tiên."
+    )
 
 
 def _guild(interaction: discord.Interaction) -> discord.Guild:
@@ -352,39 +405,72 @@ async def show_config(interaction: discord.Interaction) -> None:
     interval = config["interval_hours"] if config else 6
     sources = ", ".join(f"<#{item}>" for item in source_ids) or "Chưa có"
     await interaction.response.send_message(
-        f"**Kênh nguồn:** {sources}\n**Kênh báo cáo:** {output}\n"
+        f"**Kênh nguồn (ưu tiên cao → thấp):** {sources}\n"
+        f"**Kênh báo cáo:** {output}\n"
         f"**Chu kỳ:** {interval} giờ",
         ephemeral=True,
         allowed_mentions=discord.AllowedMentions.none(),
     )
 
 
-@bot.tree.command(name="summary", description="Tóm tắt và tạo danh sách công việc")
-@app_commands.describe(channel="Kênh cần tóm tắt", hours="Số giờ cần đọc")
+@bot.tree.command(
+    name="summary",
+    description="Tóm tắt tối đa 6 kênh theo thứ tự ưu tiên",
+)
+@app_commands.describe(
+    channel="Kênh ưu tiên 1 (cao nhất)",
+    channel_2="Kênh ưu tiên 2",
+    channel_3="Kênh ưu tiên 3",
+    channel_4="Kênh ưu tiên 4",
+    channel_5="Kênh ưu tiên 5",
+    channel_6="Kênh ưu tiên 6",
+    hours="Số giờ cần đọc",
+)
 @app_commands.checks.cooldown(1, 60, key=lambda item: (item.guild_id, item.user.id))
 async def summary_command(
     interaction: discord.Interaction,
     channel: discord.TextChannel,
+    channel_2: discord.TextChannel | None = None,
+    channel_3: discord.TextChannel | None = None,
+    channel_4: discord.TextChannel | None = None,
+    channel_5: discord.TextChannel | None = None,
+    channel_6: discord.TextChannel | None = None,
     hours: app_commands.Range[int, 1, 168] = settings.summary_default_hours,
 ) -> None:
-    guild = await _check_source(interaction, channel)
+    channels = _unique_channels(
+        [channel, channel_2, channel_3, channel_4, channel_5, channel_6]
+    )
+    guild: discord.Guild | None = None
+    for channel in channels:
+        guild = await _check_source(interaction, channel)
+    if guild is None:
+        raise app_commands.CheckFailure("Cần chọn ít nhất một kênh")
     _, output = await _output(guild)
     await interaction.response.defer(ephemeral=True, thinking=True)
     end = datetime.now(UTC)
-    count = await bot.run_summary(
+    run = await bot.run_summary(
         guild,
         output,
-        [channel],
+        channels,
         end - timedelta(hours=int(hours)),
         end,
-        f"#{channel.name}",
     )
-    message = (
-        f"Đã phân tích **{count}** tin và gửi vào {output.mention}."
-        if count
-        else "Không có tin nhắn phù hợp trong khoảng thời gian này."
+    if run.message_count:
+        message = (
+            f"Đã phân tích đầy đủ **{run.message_count}** tin từ "
+            f"**{len(run.included)} kênh** và gửi từng phần vào {output.mention}."
+        )
+    elif run.skipped:
+        message = "Không có kênh nào nằm trọn trong ngân sách context hiện tại."
+    else:
+        message = "Không có tin nhắn phù hợp trong khoảng thời gian này."
+    if run.skipped:
+        message += "\n" + _skipped_channels_notice(run.skipped)
+    await interaction.followup.send(
+        message,
+        ephemeral=True,
+        allowed_mentions=discord.AllowedMentions.none(),
     )
-    await interaction.followup.send(message, ephemeral=True)
 
 
 @bot.tree.command(name="trends", description="Phân tích xu hướng của một kênh")
