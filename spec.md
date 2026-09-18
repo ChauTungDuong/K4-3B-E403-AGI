@@ -239,3 +239,5 @@ Hệ thống không hỗ trợ giải bài tập hộ hoặc duyệt đơn xin n
 | 18/9 21:00 | Hoàn thiện §3, §4, §5, §6 (phân tích đối thủ, thiết kế, 4 nguyên tắc HAX/PAIR, 8 kịch bản 4 lớp chỗ khó, 4 nhánh UX) | Hoàn thành đầy đủ hồ sơ thiết kế trải nghiệm mốc CP2 |
 | 18/9 16:00 | Bổ sung §7: Golden Set 22 test case, khóa cứng Quality Bar định lượng và kết quả đo đạc thực tế | Hoàn thành kiểm thử nguyên mẫu AI thật mốc CP3 |
 | 18/9 20:00 | Chuẩn hóa toàn diện 9 phần của AI Spec phục vụ nghiệm thu Checkpoint 4 (CP4) | Đồng bộ các slash command (/summary, /chat, /trends), tên kênh thực tế và khóa chuẩn Quality Bar |
+| 18/9 21:30 | Bổ sung nút jump link trực tiếp to rõ dưới mỗi thẻ P1/P2 và thêm chỉ báo độ trễ xử lý AI `(độ trễ: 1.1s)` | Dựa trên kết quả thử nghiệm Mom Test 5 người dùng ngoài nhóm tại `validation/user_testing_log.md` (Feedback của Trần Nam Anh và Hoàng Anh Minh cho mốc CP5/R6) |
+
