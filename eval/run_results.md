@@ -124,3 +124,15 @@ Ma trận dưới đây giao giữa `source_authority` và `information_state`; 
   "source_quote": "Slide Day 03: Chatbot vs ReAct Agent"
 }
 ```
+
+## Nhận xét của người dùng thực tế (Willing Users Feedback)
+
+Kết quả kiểm thử thực tế với 4 Willing Users đã đăng ký từ CP1:
+
+| Họ và Tên | Mã Học Viên | Cụm | Nhận xét nguyên văn | Đánh giá |
+|---|:---:|:---:|---|:---:|
+| **Hoàng Phong** | `2A202602943` | Cụm C5 | *"Dễ dùng dễ hiểu."* | PASS |
+| **Trần Nam Anh** | `2A202602901` | Cụm C6 | *"Đáp ứng được nhu cầu."* | PASS |
+| **Hoàng Anh Minh** | `2A202602566` | Cụm C4 | *"Sản phẩm tốt."* | PASS |
+| **Lê Trung Kiên** | `2A202602748` | Cụm C3 | *"Sản phẩm đáng tin cậy."* | PASS |
+
