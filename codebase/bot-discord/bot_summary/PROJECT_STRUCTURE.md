@@ -277,7 +277,7 @@ class TopicTrend(BaseModel):
 
 ## 5. Luồng các lệnh chính
 
-### `/summary group|channel ... channel_6 hours end_hours_ago`
+### `/summary group|channel ... channel_6 hours end_hours_ago start_at end_at`
 
 ```text
 bot.py
@@ -288,7 +288,7 @@ bot.py
   → reporter.send_summary(từng phần)
 ```
 
-### `/chat input group|channel ... channel_6 hours end_hours_ago`
+### `/chat input group|channel ... channel_6 hours end_hours_ago start_at end_at`
 
 ```text
 bot.py
@@ -299,7 +299,7 @@ bot.py
   → trả embed có jump link dưới dạng ephemeral
 ```
 
-### `/trends group|channel current_hours end_hours_ago baseline_days`
+### `/trends group|channel current_hours end_hours_ago start_at end_at baseline_days`
 
 ```text
 bot.py

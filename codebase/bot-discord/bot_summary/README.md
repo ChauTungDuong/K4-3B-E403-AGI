@@ -50,6 +50,7 @@ Thành viên có quyền đọc kênh nguồn có thể dùng:
 ```text
 /summary channel:#thông-báo channel_2:#backend channel_3:#thảo-luận hours:24
 /summary group:du-an-a hours:24 end_hours_ago:12
+/summary group:du-an-a start_at:"2026-09-20 08:30" end_at:"2026-09-20 17:15"
 /chat input:"Chỉ liệt kê deadline dạng checklist" channel:#thông-báo hours:24
 /trends group:du-an-a current_hours:24 baseline_days:7
 /help
@@ -90,6 +91,15 @@ Các lệnh phân tích mặc định đọc từ 24 giờ trước đến hiệ
 `/summary` và `/chat` (hoặc `current_hours` của `/trends`) là mốc bắt đầu;
 `end_hours_ago` là mốc kết thúc. Ví dụ `hours:24 end_hours_ago:12` đọc từ
 24 giờ trước đến 12 giờ trước. Mốc kết thúc phải nhỏ hơn mốc bắt đầu.
+
+Để chọn chính xác ngày, giờ và phút, truyền đồng thời `start_at` và `end_at`
+theo dạng `YYYY-MM-DD HH:mm`. Mốc không ghi múi giờ được hiểu là giờ Việt Nam
+(UTC+7); cũng có thể dùng ISO 8601 kèm múi giờ, ví dụ
+`2026-09-20T01:30+00:00`. Khi có đủ hai mốc tuyệt đối, bot bỏ qua
+`hours`/`current_hours` và `end_hours_ago`. Nếu không truyền hai mốc này, hành
+vi mặc định theo số giờ vẫn giữ nguyên. `/trends` dùng khoảng tuyệt đối làm cửa
+sổ hiện tại và vẫn lấy `baseline_days` ngay trước `start_at`. Khoảng được chọn
+không dài quá 168 giờ, giống giới hạn của cách nhập theo số giờ.
 
 Kết quả được gửi vào kênh output đã cấu hình. Digest dùng khung 🔴/🟡/🟢 tối đa 8 dòng; bản tin trend dùng khung 🔥/💡 tối đa 10 dòng. Mỗi mục có channel mention và jump link tới tin gốc khi có bằng chứng hợp lệ. Trạng thái lệnh và lỗi chỉ hiện với người gọi.
 

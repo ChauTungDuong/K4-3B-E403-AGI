@@ -18,7 +18,7 @@ from models import Message, SafeMessage
 from privacy import PrivacySanitizer
 from reporter import chat_embeds, send_embeds, send_trend_report, summary_embeds
 from summary import SummaryService
-from time_window import TimeWindow, make_time_window
+from time_window import TimeWindow, resolve_time_window
 from trends import TrendService
 
 
@@ -322,10 +322,18 @@ def _clean_group_name(name: str) -> str:
 
 
 def _command_time_window(
-    start_hours_ago: int, end_hours_ago: int
+    start_hours_ago: int,
+    end_hours_ago: int,
+    start_at: str | None = None,
+    end_at: str | None = None,
 ) -> TimeWindow:
     try:
-        return make_time_window(start_hours_ago, end_hours_ago)
+        return resolve_time_window(
+            start_hours_ago,
+            end_hours_ago,
+            start_at=start_at,
+            end_at=end_at,
+        )
     except ValueError as exc:
         raise app_commands.CheckFailure(str(exc)) from exc
 
@@ -619,6 +627,8 @@ async def show_config(interaction: discord.Interaction) -> None:
     channel_6="Kênh ưu tiên 6",
     hours="Mốc bắt đầu: số giờ trước (mặc định 24)",
     end_hours_ago="Mốc kết thúc: số giờ trước (mặc định 0 = hiện tại)",
+    start_at="Mốc bắt đầu tuyệt đối: YYYY-MM-DD HH:mm (giờ Việt Nam)",
+    end_at="Mốc kết thúc tuyệt đối: YYYY-MM-DD HH:mm (giờ Việt Nam)",
 )
 @app_commands.checks.cooldown(1, 60, key=lambda item: (item.guild_id, item.user.id))
 async def summary_command(
@@ -632,6 +642,8 @@ async def summary_command(
     channel_6: discord.TextChannel | None = None,
     hours: app_commands.Range[int, 1, 168] = settings.summary_default_hours,
     end_hours_ago: app_commands.Range[int, 0, 167] = 0,
+    start_at: str | None = None,
+    end_at: str | None = None,
 ) -> None:
     guild, channels = await _requested_channels(
         interaction,
@@ -639,7 +651,9 @@ async def summary_command(
         [channel, channel_2, channel_3, channel_4, channel_5, channel_6],
     )
     _, output = await _output(guild)
-    window = _command_time_window(int(hours), int(end_hours_ago))
+    window = _command_time_window(
+        int(hours), int(end_hours_ago), start_at, end_at
+    )
     await interaction.response.defer(ephemeral=True, thinking=True)
     run = await bot.run_summary(
         guild,
@@ -682,6 +696,8 @@ async def summary_command(
     channel_6="Kênh ưu tiên 6",
     hours="Mốc bắt đầu: số giờ trước (mặc định 24)",
     end_hours_ago="Mốc kết thúc: số giờ trước (mặc định 0 = hiện tại)",
+    start_at="Mốc bắt đầu tuyệt đối: YYYY-MM-DD HH:mm (giờ Việt Nam)",
+    end_at="Mốc kết thúc tuyệt đối: YYYY-MM-DD HH:mm (giờ Việt Nam)",
 )
 @app_commands.checks.cooldown(1, 30, key=lambda item: (item.guild_id, item.user.id))
 async def chat_command(
@@ -696,6 +712,8 @@ async def chat_command(
     channel_6: discord.TextChannel | None = None,
     hours: app_commands.Range[int, 1, 168] = settings.summary_default_hours,
     end_hours_ago: app_commands.Range[int, 0, 167] = 0,
+    start_at: str | None = None,
+    end_at: str | None = None,
 ) -> None:
     guild, channels = await _requested_channels(
         interaction,
@@ -703,7 +721,9 @@ async def chat_command(
         [channel, channel_2, channel_3, channel_4, channel_5, channel_6],
         use_all_sources_by_default=True,
     )
-    window = _command_time_window(int(hours), int(end_hours_ago))
+    window = _command_time_window(
+        int(hours), int(end_hours_ago), start_at, end_at
+    )
 
     await interaction.response.defer(ephemeral=True, thinking=True)
     run, embeds = await bot.run_chat(
@@ -741,6 +761,8 @@ async def chat_command(
     group="Tên nhóm kênh đã lưu bằng /group-set",
     current_hours="Mốc bắt đầu: số giờ trước (mặc định 24)",
     end_hours_ago="Mốc kết thúc: số giờ trước (mặc định 0 = hiện tại)",
+    start_at="Mốc bắt đầu tuyệt đối: YYYY-MM-DD HH:mm (giờ Việt Nam)",
+    end_at="Mốc kết thúc tuyệt đối: YYYY-MM-DD HH:mm (giờ Việt Nam)",
     baseline_days="Số ngày dùng làm baseline",
 )
 @app_commands.checks.cooldown(1, 60, key=lambda item: (item.guild_id, item.user.id))
@@ -750,11 +772,15 @@ async def trends_command(
     group: str | None = None,
     current_hours: app_commands.Range[int, 1, 168] = settings.trend_current_hours,
     end_hours_ago: app_commands.Range[int, 0, 167] = 0,
+    start_at: str | None = None,
+    end_at: str | None = None,
     baseline_days: app_commands.Range[int, 1, 30] = settings.trend_baseline_days,
 ) -> None:
     guild, channels = await _requested_channels(interaction, group, [channel])
     _, output = await _output(guild)
-    window = _command_time_window(int(current_hours), int(end_hours_ago))
+    window = _command_time_window(
+        int(current_hours), int(end_hours_ago), start_at, end_at
+    )
     await interaction.response.defer(ephemeral=True, thinking=True)
     count = 0
     channels_with_data = 0
@@ -812,7 +838,8 @@ async def help_command(interaction: discord.Interaction) -> None:
         value=(
             "`hours`/`current_hours` là mốc bắt đầu; `end_hours_ago` là mốc kết thúc.\n"
             "Ví dụ `hours:24 end_hours_ago:12` đọc từ 24 giờ trước đến 12 giờ trước. "
-            "Bỏ các tham số này sẽ dùng 24 giờ trước đến hiện tại."
+            "Hoặc truyền đủ `start_at` và `end_at` theo dạng `YYYY-MM-DD HH:mm` "
+            "(giờ Việt Nam). Bỏ các tham số này sẽ dùng 24 giờ trước đến hiện tại."
         ),
         inline=False,
     )

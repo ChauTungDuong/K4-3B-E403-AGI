@@ -29,6 +29,8 @@ content: nội dung tin nhắn đã được làm sạch.
 Nếu không chọn group hoặc channel, /chat dùng tất cả kênh nguồn đã cấu hình.
 Bot thu thập:
 - Tin nhắn trong khoảng thời gian được chọn.
+- Có thể chọn theo số giờ trước như hiện tại, hoặc truyền đủ start_at và end_at
+  dạng YYYY-MM-DD HH:mm theo giờ Việt Nam (UTC+7).
 - Tin nhắn trong các thread, kể cả archived thread phù hợp.
 - Quan hệ reply và reaction.
 - Tối đa 2.000 ký tự cho mỗi nội dung tin nhắn.
