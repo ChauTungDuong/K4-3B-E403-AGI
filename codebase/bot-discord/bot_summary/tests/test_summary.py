@@ -21,6 +21,20 @@ class SummaryTests(unittest.TestCase):
         self.assertEqual(assign_priority("P0", "việc thông thường"), "P1")
         self.assertEqual(assign_priority("P2", "production sập cần xử lý"), "P0")
 
+    def test_negation_downgrades_priority_to_p3(self) -> None:
+        self.assertEqual(
+            assign_priority("P1", "Khi tiện xem lại slide, không có deadline và không cần gấp"),
+            "P3",
+        )
+        self.assertEqual(
+            assign_priority("P2", "Đọc thêm tài liệu khi tiện"),
+            "P3",
+        )
+        self.assertEqual(
+            assign_priority("P2", "hạn chót nộp bài"),
+            "P1",
+        )
+
     def test_duplicate_tasks_are_merged(self) -> None:
         result = merge_duplicate_tasks(
             [

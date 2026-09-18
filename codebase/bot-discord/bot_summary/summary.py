@@ -23,8 +23,32 @@ _P0_WORDS = {
     "mất dữ liệu",
     "security incident",
     "ngừng hoạt động",
+    "sập server",
+    "hỏng link thi",
+    "lỗi hệ thống nộp bài",
 }
-_P1_WORDS = {"hôm nay", "deadline", "trước ngày", "ưu tiên cao", "gấp"}
+_P1_WORDS = {
+    "hạn chót",
+    "ưu tiên cao",
+    "gấp",
+    "nộp nhầm repo",
+    "đổi phòng sát giờ",
+    "đổi giờ sát giờ",
+    "hết hạn trong ngày",
+}
+_NEGATION_WORDS = {
+    "không có deadline",
+    "ko có deadline",
+    "không cần gấp",
+    "chưa cần gấp",
+    "không gấp",
+    "khi tiện",
+    "tham khảo",
+    "không bắt buộc",
+    "chưa cần xử lý",
+    "tùy chọn",
+    "khi rảnh",
+}
 _TIME_PATTERN = re.compile(
     r"\b(?:hôm nay|ngày mai|tuần này|today|tomorrow|this week|thứ [2-7]|"
     r"chủ nhật|deadline|\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?|\d{4}-\d{2}-\d{2})\b",
@@ -114,8 +138,10 @@ class SummaryService:
 
 
 def assign_priority(proposed: Priority, evidence_text: str) -> Priority:
-    """Code xác nhận các mức cao để model không tùy ý gắn P0."""
+    """Code xác nhận các mức cao để model không tùy ý gắn P0 và tránh nâng hạng sai khi có phủ định."""
     text = evidence_text.casefold()
+    if any(word in text for word in _NEGATION_WORDS):
+        return "P3"
     if any(word in text for word in _P0_WORDS):
         return "P0"
     if proposed == "P0":
