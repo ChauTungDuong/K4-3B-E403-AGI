@@ -24,6 +24,8 @@ _P0_WORDS = {
     "security incident",
     "ngừng hoạt động",
     "sập server",
+    "server sập",
+    "sự cố khẩn cấp",
     "hỏng link thi",
     "lỗi hệ thống nộp bài",
 }
