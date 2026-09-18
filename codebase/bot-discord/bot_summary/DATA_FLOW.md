@@ -21,7 +21,7 @@ flowchart TD
     TR["TrendResult"]
     DB[("SQLite<br/>Chỉ lưu TrendResult đã ẩn danh<br/>+ guild/channel metadata")]
     OG["Output Guard<br/>Quét PII lần cuối"]
-    OUT["Discord Embed<br/>Không tên/ID người thật<br/>AllowedMentions.none"]
+    OUT["Discord<br/>Tổng quan công khai + nút chi tiết<br/>Chi tiết ephemeral cho người bấm"]
     BLOCK["Chặn gửi<br/>nếu còn dấu hiệu PII"]
 
     A --> B

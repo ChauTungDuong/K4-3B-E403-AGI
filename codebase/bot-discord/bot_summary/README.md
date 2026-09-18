@@ -51,6 +51,8 @@ Thành viên có quyền đọc kênh nguồn có thể dùng:
 
 Kết quả được gửi vào kênh output đã cấu hình. Trạng thái lệnh và lỗi chỉ hiện với người gọi.
 
+Báo cáo trend ban đầu chỉ hiển thị kết luận chung. Người dùng bấm `📊 Xem chi tiết` để mở topic và số liệu trong phản hồi riêng tư; nút hoạt động trong 60 phút sau khi báo cáo được gửi.
+
 ## Cách đảm bảo chất lượng
 
 Summary chỉ giữ task có `evidence_ref` hợp lệ, không tự đoán owner/deadline, loại task đã xong hoặc bị hủy và kiểm tra lại P0 bằng code.

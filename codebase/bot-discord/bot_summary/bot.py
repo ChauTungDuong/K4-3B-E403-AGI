@@ -15,7 +15,7 @@ from database import Database
 from gemini import GeminiClient
 from models import Message
 from privacy import PrivacySanitizer
-from reporter import send_embeds, summary_embeds, trend_embeds
+from reporter import send_embeds, send_trend_report, summary_embeds
 from summary import SummaryService
 from trends import TrendService
 
@@ -123,7 +123,7 @@ class SummaryBot(commands.Bot):
             await self.db.save_trend_snapshot(
                 guild.id, channel.id, current_hours, baseline_days, result
             )
-            await send_embeds(output, trend_embeds(result, f"#{channel.name}"))
+            await send_trend_report(output, result, f"#{channel.name}")
             return len(current_safe)
 
     @tasks.loop(minutes=1)
