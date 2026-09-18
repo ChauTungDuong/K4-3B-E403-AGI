@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Giao diện Discord tổng hợp và phân tích thông báo cộng đồng bằng trợ lý AI theo mức độ ưu tiên.">
+  <title>VinAI Campus — Trợ lý tổng hợp ưu tiên</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="server-rail" aria-label="Danh sách máy chủ">
+      <button class="server-button home active" aria-label="VinAI Campus" data-tooltip="VinAI Campus">
+        <img src="favicon.ico" alt="">
+      </button>
+      <div class="rail-separator"></div>
+      <button class="server-button class-server" aria-label="Lớp AI 2026" data-tooltip="Lớp AI 2026">AI</button>
+      <button class="server-button secondary" aria-label="Cộng đồng Data" data-tooltip="Cộng đồng Data">D</button>
+      <button class="server-button add" aria-label="Thêm máy chủ" data-tooltip="Thêm máy chủ">+</button>
+      <button class="server-button explore" aria-label="Khám phá" data-tooltip="Khám phá">⌁</button>
+    </aside>
+
+    <aside class="channel-sidebar" id="channelSidebar" aria-label="Danh sách kênh">
+      <header class="server-header">
+        <div>
+          <strong>VinAI Campus</strong>
+          <span>Cộng đồng học tập</span>
+        </div>
+        <button class="icon-button" aria-label="Tùy chọn máy chủ">⌄</button>
+      </header>
+
+      <nav class="channel-scroll" aria-label="Kênh VinAI Campus">
+        <button class="event-card" type="button">
+          <span class="event-icon">✦</span>
+          <span><b>Sự kiện: AI Agent</b><small>20:00 · Phòng workshop</small></span>
+          <span class="event-count">24</span>
+        </button>
+
+        <section class="channel-group">
+          <div class="group-title"><span>⌄ KÊNH THÔNG TIN</span><button aria-label="Thêm kênh">+</button></div>
+          <button class="channel-item" data-channel="announcements"><span class="channel-hash">#</span>thông-báo</button>
+          <button class="channel-item" data-channel="assignments"><span class="channel-hash">#</span>bài-tập<span class="channel-badge">3</span></button>
+          <button class="channel-item" data-channel="schedule"><span class="channel-hash">#</span>lịch-học</button>
+        </section>
+
+        <section class="channel-group">
+          <div class="group-title"><span>⌄ TRÒ CHUYỆN</span><button aria-label="Thêm kênh">+</button></div>
+          <button class="channel-item" data-channel="general"><span class="channel-hash">#</span>chung<span class="channel-badge mention">5</span></button>
+          <button class="channel-item" data-channel="discussion"><span class="channel-hash">#</span>thảo-luận</button>
+          <button class="channel-item" data-channel="support"><span class="channel-hash">#</span>hỗ-trợ</button>
+        </section>
+
+        <section class="channel-group bot-group">
+          <div class="group-title"><span>⌄ TRỢ LÝ AI</span><button aria-label="Thêm kênh">+</button></div>
+          <button class="channel-item active bot-channel" data-channel="assistant">
+            <span class="bot-glyph" aria-hidden="true">✦</span>
+            <span>trợ-lý-tổng-hợp</span>
+            <span class="live-dot" title="Đang hoạt động"></span>
+          </button>
+        </section>
+
+        <section class="channel-group">
+          <div class="group-title"><span>⌄ KÊNH THOẠI</span><button aria-label="Thêm kênh">+</button></div>
+          <button class="channel-item voice"><span aria-hidden="true">◖</span> Phòng học chung</button>
+        </section>
+      </nav>
+
+      <footer class="user-panel">
+        <div class="avatar avatar-user">T<span class="status-dot"></span></div>
+        <div class="user-copy"><strong>tuienn</strong><span>Trực tuyến</span></div>
+        <button class="icon-button" id="micButton" aria-label="Bật hoặc tắt mic">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm6-3a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-2.09A6 6 0 0 0 18 12Z"></path></svg>
+        </button>
+        <button class="icon-button" aria-label="Cài đặt">⚙</button>
+      </footer>
+    </aside>
+
+    <main class="chat-column">
+      <header class="chat-header">
+        <button class="mobile-menu icon-button" id="mobileMenu" aria-label="Mở danh sách kênh">☰</button>
+        <div class="channel-heading">
+          <span class="heading-icon" id="headingIcon">✦</span>
+          <div><strong id="channelTitle">trợ-lý-tổng-hợp</strong><span id="channelDescription">Hỏi nhanh, nhận tóm tắt có nguồn từ toàn bộ server</span></div>
+        </div>
+        <div class="header-actions">
+          <button class="icon-button" aria-label="Thông báo">♟</button>
+          <button class="icon-button" id="memberToggle" aria-label="Ẩn hoặc hiện danh sách thành viên">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7.2-1a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 18.5C2 15.46 4.46 13 7.5 13h2c3.04 0 5.5 2.46 5.5 5.5V20H2v-1.5Zm14.9-5.45c2.87.2 5.1 2.6 5.1 5.45V20h-5v-1.5a7.4 7.4 0 0 0-1.55-4.53c.45-.36.95-.67 1.45-.92Z"></path></svg>
+          </button>
+          <label class="search-box"><span aria-hidden="true">⌕</span><input type="search" id="searchInput" placeholder="Tìm kiếm" aria-label="Tìm trong kênh"></label>
+          <button class="icon-button" aria-label="Trợ giúp">?</button>
+        </div>
+      </header>
+
+      <section class="chat-surface" aria-live="polite">
+        <div class="message-scroll" id="messageScroll" tabindex="0" aria-label="Nội dung hội thoại">
+          <div id="assistantView" class="channel-view active">
+            <div class="bot-intro">
+              <div class="avatar avatar-bot large">✦<span class="bot-mini">BOT</span></div>
+              <div class="intro-copy">
+                <div class="eyebrow">TRỢ LÝ CỦA VINAI CAMPUS</div>
+                <h1>Không cần đọc ngược 362 tin nhắn.</h1>
+                <p>Hỏi điều bạn vừa bỏ lỡ. Mình tổng hợp theo độ ưu tiên, kiểm tra nguồn và dẫn bạn về đúng tin nhắn gốc.</p>
+              </div>
+              <div class="trust-row">
+                <span><b>6</b> kênh đang theo dõi</span>
+                <span><b>Vừa xong</b> lần đồng bộ cuối</span>
+                <span><b>92/100</b> sức khỏe hội thoại</span>
+              </div>
+            </div>
+
+            <div class="date-divider"><span>Hôm nay</span></div>
+
+            <article class="message bot-message">
+              <div class="avatar avatar-bot">✦</div>
+              <div class="message-body">
+                <div class="message-meta"><strong>Trợ Lý Tổng Hợp</strong><span class="app-tag">ỨNG DỤNG</span><time>Hôm nay lúc 09:42</time></div>
+                <p>Chào bạn! Mình đã cập nhật dữ liệu từ các kênh bạn có quyền xem. Bạn có thể hỏi tự nhiên hoặc chọn một lệnh nhanh bên dưới.</p>
+                <div class="command-grid" aria-label="Lệnh gợi ý">
+                  <button class="command-card" data-command="/digest 24h"><span class="command-icon urgent">!</span><span><b>Tóm tắt 24 giờ</b><small>Việc quan trọng theo P1 · P2 · P3</small></span><code>/digest 24h</code></button>
+                  <button class="command-card" data-command="/insight #chung 24h"><span class="command-icon insight">⌁</span><span><b>Phân tích #chung</b><small>Chủ đề, xu hướng và sức khỏe</small></span><code>/insight</code></button>
+                  <button class="command-card" data-command="/hot #chung"><span class="command-icon hot">↗</span><span><b>Chủ đề đang nóng</b><small>Xếp hạng theo tốc độ thảo luận</small></span><code>/hot</code></button>
+                  <button class="command-card" data-command="/health #chung"><span class="command-icon health">✓</span><span><b>Sức khỏe hội thoại</b><small>Độ văn minh và cảnh báo đáng chú ý</small></span><code>/health</code></button>
+                </div>
+              </div>
+            </article>
+
+            <article class="message user-message sample-user-message">
+              <div class="avatar avatar-user">T</div>
+              <div class="message-body">
+                <div class="message-meta"><strong>tuienn</strong><time>Hôm nay lúc 09:43</time></div>
+                <p>Trong 24 giờ qua có gì quan trọng mình cần làm không?</p>
+              </div>
+            </article>
+
+            <article class="message bot-message sample-bot-response">
+              <div class="avatar avatar-bot">✦</div>
+              <div class="message-body">
+                <div class="message-meta"><strong>Trợ Lý Tổng Hợp</strong><span class="app-tag">ỨNG DỤNG</span><time>Hôm nay lúc 09:43</time><span class="latency">1,8 giây</span></div>
+                <div class="response-card digest-card">
+                  <div class="response-head">
+                    <div><span class="response-kicker">BẢN TIN ƯU TIÊN · 24 GIỜ</span><h2>3 việc đáng chú ý</h2></div>
+                    <span class="verified-badge">✓ Đã kiểm tra nguồn</span>
+                  </div>
+                  <ol class="digest-list">
+                    <li class="priority-item p1">
+                      <span class="priority-badge">P1</span>
+                      <div><strong>Nộp Assignment 03 trước 23:59 hôm nay</strong><p>File PDF, tối đa 10 trang. Giảng viên vừa ghim lại yêu cầu nộp bài.</p><button class="source-link" data-jump="assignments">#bài-tập · Xem tin gốc ↗</button></div>
+                      <time>Còn 8 giờ</time>
+                    </li>
+                    <li class="priority-item p1">
+                      <span class="priority-badge">P1</span>
+                      <div><strong>Lịch workshop tối nay đổi sang 20:00</strong><p>Phòng học chuyển sang Voice · Workshop. Link tham gia không đổi.</p><button class="source-link" data-jump="general">#chung · Xem tin gốc ↗</button></div>
+                      <time>20:00</time>
+                    </li>
+                    <li class="priority-item p2">
+                      <span class="priority-badge">P2</span>
+                      <div><strong>Đã đăng tài liệu MCP Server</strong><p>Slide và mã mẫu nằm trong thread “MCP resources”.</p><button class="source-link" data-jump="discussion">#thảo-luận · Xem thảo luận ↗</button></div>
+                      <time>09:12</time>
+                    </li>
+                  </ol>
+                  <div class="response-foot"><span>Tổng hợp từ 362 tin nhắn · 6 kênh</span><div class="feedback"><span>Kết quả này hữu ích?</span><button aria-label="Hữu ích">👍</button><button aria-label="Chưa đúng">👎</button></div></div>
+                </div>
+              </div>
+            </article>
+            <div id="dynamicMessages"></div>
+          </div>
+
+          <div id="generalView" class="channel-view">
+            <div class="channel-welcome">
+              <div class="hash-disc">#</div>
+              <h1>Chào mừng đến với #chung!</h1>
+              <p>Đây là nơi mọi người cập nhật nhanh, đặt câu hỏi và trao đổi về lớp học.</p>
+            </div>
+            <div class="date-divider"><span>17 tháng 9, 2026</span></div>
+            <article class="message source-message" data-search="workshop lịch học 20 giờ">
+              <div class="avatar avatar-lecturer">N</div>
+              <div class="message-body"><div class="message-meta"><strong>Nguyễn Minh</strong><span class="role-tag lecturer">GIẢNG VIÊN</span><time>Hôm nay lúc 08:18</time></div><p><strong>@everyone</strong> workshop AI Agent tối nay chuyển sang <b>20:00</b> nhé. Mình vẫn dùng phòng Voice · Workshop và link cũ.</p><div class="reactions"><span>✅ 18</span><span>👍 7</span></div></div>
+            </article>
+            <article class="message" data-search="assignment bài tập nộp deadline">
+              <div class="avatar avatar-student">L</div>
+              <div class="message-body"><div class="reply-preview"><span></span>Trả lời Nguyễn Minh: “workshop AI Agent tối nay...”</div><div class="message-meta"><strong>Lan Anh</strong><time>Hôm nay lúc 08:24</time></div><p>Em đã rõ ạ. Thầy cho em hỏi Assignment 03 vẫn nộp trước 23:59 hôm nay đúng không ạ?</p></div>
+            </article>
+            <article class="message" data-search="assignment deadline pdf 10 trang">
+              <div class="avatar avatar-lecturer">N</div>
+              <div class="message-body"><div class="message-meta"><strong>Nguyễn Minh</strong><span class="role-tag lecturer">GIẢNG VIÊN</span><time>Hôm nay lúc 08:27</time></div><p>Đúng rồi em. Deadline không đổi: <b>23:59 hôm nay</b>, nộp PDF tối đa 10 trang trong <span class="channel-mention">#bài-tập</span>.</p><div class="reactions"><span>👌 12</span></div></div>
+            </article>
+            <article class="message" data-search="MCP server tài liệu slide code">
+              <div class="avatar avatar-mentor">H</div>
+              <div class="message-body"><div class="message-meta"><strong>Hoàng Phúc</strong><span class="role-tag mentor">MENTOR</span><time>Hôm nay lúc 09:12</time></div><p>Mình vừa gom slide và code mẫu MCP Server vào thread <span class="channel-mention">#thảo-luận › MCP resources</span>. Bạn nào đang làm agent có thể vào xem.</p><div class="reactions"><span>🔥 9</span><span>💾 4</span></div></div>
+            </article>
+            <article class="message" data-search="cảm ơn mcp agent">
+              <div class="avatar avatar-student blue">Q</div>
+              <div class="message-body"><div class="message-meta"><strong>Quang Huy</strong><time>Hôm nay lúc 09:20</time></div><p>Cảm ơn anh, đúng phần em đang kẹt luôn 🙌</p></div>
+            </article>
+          </div>
+
+          <div id="placeholderView" class="channel-view">
+            <div class="channel-welcome compact"><div class="hash-disc">#</div><h1 id="placeholderTitle">Kênh</h1><p id="placeholderText">Nội dung kênh này đã được đồng bộ và sẵn sàng cho trợ lý tổng hợp.</p></div>
+          </div>
+        </div>
+
+        <form class="composer" id="chatForm">
+          <button type="button" class="add-attachment" aria-label="Thêm tệp">+</button>
+          <label for="messageInput" class="sr-only">Nhắn trong kênh</label>
+          <textarea id="messageInput" rows="1" placeholder="Nhắn #trợ-lý-tổng-hợp" autocomplete="off"></textarea>
+          <div class="composer-actions">
+            <button type="button" aria-label="Tặng quà">◇</button>
+            <button type="button" aria-label="Chọn ảnh GIF">GIF</button>
+            <button type="button" aria-label="Chọn biểu cảm">☺</button>
+            <button type="submit" class="send-button" aria-label="Gửi tin nhắn">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.1 3.7a1 1 0 0 1 1.12-.18l16.2 7.5a1.07 1.07 0 0 1 0 1.96l-16.2 7.5a1 1 0 0 1-1.4-1.14L4.2 13 13 12 4.2 11 2.82 4.66a1 1 0 0 1 .28-.96Z"></path></svg>
+            </button>
+          </div>
+          <div class="composer-hint" id="composerHint"><span>↵ để gửi</span><span>Shift + ↵ để xuống dòng</span></div>
+        </form>
+      </section>
+    </main>
+
+    <aside class="member-sidebar" id="memberSidebar" aria-label="Danh sách thành viên">
+      <div class="member-insight">
+        <span class="pulse-dot"></span>
+        <div><strong>Hệ thống ổn định</strong><span>362 tin · 24 giờ qua</span></div>
+      </div>
+      <section>
+        <h2>TRỰC TUYẾN — 6</h2>
+        <div class="member"><div class="avatar avatar-bot">✦<span class="status-dot"></span></div><div><strong>Trợ Lý Tổng Hợp <span class="app-tag">BOT</span></strong><span>Đang theo dõi 6 kênh</span></div></div>
+        <div class="member"><div class="avatar avatar-lecturer">N<span class="status-dot"></span></div><div><strong>Nguyễn Minh</strong><span>Giảng viên</span></div></div>
+        <div class="member"><div class="avatar avatar-mentor">H<span class="status-dot"></span></div><div><strong>Hoàng Phúc</strong><span>Mentor · Đang hỗ trợ</span></div></div>
+        <div class="member"><div class="avatar avatar-student">L<span class="status-dot idle"></span></div><div><strong>Lan Anh</strong><span>Đang rảnh</span></div></div>
+        <div class="member"><div class="avatar avatar-student blue">Q<span class="status-dot"></span></div><div><strong>Quang Huy</strong><span>VS Code</span></div></div>
+        <div class="member"><div class="avatar avatar-user">T<span class="status-dot"></span></div><div><strong>tuienn</strong><span>Trực tuyến</span></div></div>
+      </section>
+      <section class="offline-members">
+        <h2>NGOẠI TUYẾN — 18</h2>
+        <div class="member"><div class="avatar gray">M</div><div><strong>Mai Chi</strong><span>Ngoại tuyến</span></div></div>
+        <div class="member"><div class="avatar gray">A</div><div><strong>Anh Tuấn</strong><span>Ngoại tuyến</span></div></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="mobile-scrim" id="mobileScrim"></div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="script.js"></script>
+</body>
+</html>
