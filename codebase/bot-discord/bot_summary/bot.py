@@ -77,19 +77,19 @@ class SummaryBot(commands.Bot):
     async def run_summary(
         self,
         guild: discord.Guild,
-        output: discord.TextChannel,
+        output: discord.TextChannel | None,
         channels: list[discord.TextChannel],
         start: datetime,
         end: datetime,
         requester_id: int | None = None,
-    ) -> PrioritizedCollection:
+    ) -> tuple[PrioritizedCollection, list[discord.Embed]]:
         async with self._lock(guild.id):
             collection = await self.collector.collect_channels_atomic(
                 channels, start, end
             )
             raw = collection.messages
             if not raw:
-                return collection
+                return collection, []
             safe = PrivacySanitizer(requester_id=requester_id).sanitize(raw)
             sources = _report_sources(guild.id, raw, safe)
             safe_by_channel: dict[int, list[SafeMessage]] = {
@@ -114,8 +114,9 @@ class SummaryBot(commands.Bot):
                         sources=sources,
                     )
                 )
-            await send_embeds(output, embeds)
-            return collection
+            if output is not None and embeds:
+                await send_embeds(output, embeds)
+            return collection, embeds
 
     async def run_chat(
         self,
@@ -208,7 +209,7 @@ class SummaryBot(commands.Bot):
             if last_run.tzinfo is None:
                 last_run = last_run.replace(tzinfo=UTC)
             try:
-                summary_run = await self.run_summary(
+                summary_run, _ = await self.run_summary(
                     guild, output, channels, last_run, now
                 )
                 if summary_run.skipped:
@@ -446,61 +447,117 @@ async def show_config(interaction: discord.Interaction) -> None:
 
 @bot.tree.command(
     name="summary",
-    description="Tóm tắt tối đa 6 kênh theo thứ tự ưu tiên",
+    description="Tóm tắt kênh nguồn (mặc định kênh hiện tại hoặc tất cả kênh nguồn)",
 )
 @app_commands.describe(
-    channel="Kênh ưu tiên 1 (cao nhất)",
+    channel="Kênh ưu tiên 1 (bỏ trống để tự nhận diện kênh hiện tại hoặc mọi kênh nguồn)",
     channel_2="Kênh ưu tiên 2",
     channel_3="Kênh ưu tiên 3",
     channel_4="Kênh ưu tiên 4",
     channel_5="Kênh ưu tiên 5",
     channel_6="Kênh ưu tiên 6",
     hours="Số giờ cần đọc",
+    private="Chỉ hiển thị riêng cho bạn tại kênh này (mặc định: True)",
 )
 @app_commands.checks.cooldown(1, 60, key=lambda item: (item.guild_id, item.user.id))
 async def summary_command(
     interaction: discord.Interaction,
-    channel: discord.TextChannel,
+    channel: discord.TextChannel | None = None,
     channel_2: discord.TextChannel | None = None,
     channel_3: discord.TextChannel | None = None,
     channel_4: discord.TextChannel | None = None,
     channel_5: discord.TextChannel | None = None,
     channel_6: discord.TextChannel | None = None,
     hours: app_commands.Range[int, 1, 168] = settings.summary_default_hours,
+    private: bool = True,
 ) -> None:
+    guild = _guild(interaction)
     channels = _unique_channels(
         [channel, channel_2, channel_3, channel_4, channel_5, channel_6]
     )
-    guild: discord.Guild | None = None
-    for channel in channels:
-        guild = await _check_source(interaction, channel)
-    if guild is None:
-        raise app_commands.CheckFailure("Cần chọn ít nhất một kênh")
-    _, output = await _output(guild)
-    await interaction.response.defer(ephemeral=True, thinking=True)
+    if not channels:
+        current_channel = interaction.channel
+        source_ids = set(await bot.db.get_sources(guild.id))
+        if (
+            isinstance(current_channel, discord.TextChannel)
+            and current_channel.id in source_ids
+        ):
+            channels = [current_channel]
+        else:
+            channels = _text_channels(guild, await bot.db.get_sources(guild.id))
+            if isinstance(interaction.user, discord.Member):
+                channels = [
+                    ch
+                    for ch in channels
+                    if ch.permissions_for(interaction.user).view_channel
+                    and ch.permissions_for(interaction.user).read_message_history
+                ]
+
+    if not channels:
+        raise app_commands.CheckFailure(
+            "Chưa có kênh nguồn nào hợp lệ để tóm tắt. "
+            "Hãy chọn kênh cụ thể hoặc nhờ quản trị viên dùng /add-source."
+        )
+
+    for selected_channel in channels:
+        await _check_source(interaction, selected_channel)
+
+    output: discord.TextChannel | None = None
+    try:
+        _, output = await _output(guild)
+    except Exception:
+        output = None
+
+    await interaction.response.defer(ephemeral=private, thinking=True)
     end = datetime.now(UTC)
-    run = await bot.run_summary(
+
+    # Nếu kênh output trùng với kênh gọi lệnh và hiển thị công khai, tránh gửi đúp 2 lần:
+    output_target = (
+        output
+        if (output is not None and (output.id != interaction.channel_id or private))
+        else None
+    )
+
+    run, embeds = await bot.run_summary(
         guild,
-        output,
+        output_target,
         channels,
         end - timedelta(hours=int(hours)),
         end,
         requester_id=interaction.user.id,
     )
-    if run.message_count:
-        message = (
-            f"Đã phân tích đầy đủ **{run.message_count}** tin từ "
-            f"**{len(run.included)} kênh** và gửi từng phần vào {output.mention}."
+
+    if embeds:
+        notice = _skipped_channels_notice(run.skipped) if run.skipped else ""
+        if output is not None:
+            header = (
+                f"📌 Đã phân tích **{run.message_count}** tin từ **{len(run.included)} kênh** "
+                f"và đồng thời lưu vào {output.mention}."
+            )
+        else:
+            header = (
+                f"📌 Đã phân tích **{run.message_count}** tin từ **{len(run.included)} kênh**."
+            )
+        content = f"{header}\n{notice}".strip() if notice else header
+        await interaction.followup.send(
+            content=content,
+            embeds=embeds,
+            ephemeral=private,
+            allowed_mentions=discord.AllowedMentions.none(),
         )
-    elif run.skipped:
-        message = "Không có kênh nào nằm trọn trong ngân sách context hiện tại."
+        return
+
+    if run.skipped:
+        message = (
+            "Không có kênh nào nằm trọn trong ngân sách context hiện tại.\n"
+            + _skipped_channels_notice(run.skipped)
+        )
     else:
         message = "Không có tin nhắn phù hợp trong khoảng thời gian này."
-    if run.skipped:
-        message += "\n" + _skipped_channels_notice(run.skipped)
+
     await interaction.followup.send(
         message,
-        ephemeral=True,
+        ephemeral=private,
         allowed_mentions=discord.AllowedMentions.none(),
     )
 
