@@ -62,35 +62,41 @@
 
 ## PHẦN II. NHẬT KÝ THỬ NGHIỆM NGƯỜI DÙNG THỰC TẾ (KHỐI R6 — 8 ĐIỂM BONUS)
 
-### 1. Kịch Bản & Quy Trình Thử Nghiệm
-- **Thời gian:** 20:30 – 21:00 ngày 18/09/2026 (trước mốc CP5).
-- **Môi trường:** Server Discord lớp 3B phòng E403, kết nối mô hình Google Gemini API thật (`gemini-3.5-flash-lite`).
+### 1. Kịch Bản & Quy Trình Thử Nghiệm (Mom Test Protocol)
+- **Thời gian thử nghiệm:** 20:30 – 21:30 ngày 18/09/2026 (trước mốc CP5).
+- **Môi trường thử nghiệm:** Server Discord lớp 3B phòng E403, kết nối mô hình Google Gemini API thật (`gemini-3.5-flash-lite`).
+- **Phương pháp quan sát (Mom Test):** Người điều phối (Tuấn Anh) giao nhiệm vụ cụ thể cho từng học viên, ngồi im quan sát người dùng thao tác, ghi chép điểm nghẽn và ghi nhận quote nguyên văn phát biểu lúc đang làm việc (không hỏi câu hỏi dẫn dắt xã giao).
 - **Nhiệm vụ giao cho người dùng:**
-  - *Nhiệm vụ 1:* Dùng lệnh `/summary` quét thông báo 24h qua trên các kênh chính (`# 📢-thông-báo-lớp-học`, `# 3b-lab-e403`), kiểm tra khả năng nắm bắt hạn chót khẩn cấp (P1).
-  - *Nhiệm vụ 2:* Dùng lệnh `/chat input:"..."` tra cứu deadline bài lab, kiểm tra tính riêng tư (ephemeral) và bấm jump link `[Xem tin gốc ↗]` để tự kiểm chứng thông tin nguồn.
+  - *Nhiệm vụ 1:* Dùng lệnh `/summary` quét thông báo 24h qua trên các kênh chính (`# 📢-thông-báo-lớp-học`, `# 3b-lab-e403`), tìm hạn chót bài tập khẩn cấp.
+  - *Nhiệm vụ 2:* Dùng lệnh `/chat input:"..."` hỏi riêng về lịch nộp bài, kiểm tra phản hồi riêng tư (ephemeral) và bấm jump link `[Xem tin gốc ↗]` để tự kiểm chứng thông tin nguồn.
 
-### 2. Bảng Ghi Nhận Phản Hồi Thực Tế (5 Người Dùng Ngoài Nhóm)
+### 2. Bảng Nhật Ký Ghi Nhận Thực Tế (5 Người Dùng Ngoài Nhóm)
 
-| STT | Người dùng thử nghiệm | Mã Học Viên | Cụm / Vị trí | Nhiệm vụ thực hiện | Kết quả thao tác | Trích dẫn nhận xét nguyên văn | Đánh giá nghiệm thu |
-|:---:|---|:---:|:---:|---|:---:|---|:---:|
-| 1 | **Hoàng Phong** | `2A202602943` | Cụm C5 · E403 | Thao tác lệnh `/summary` & `/chat` tra deadline | Thành công, không tắc nghẽn | *"Dễ dùng dễ hiểu."* | ✅ **ĐẠT (PASS)** |
-| 2 | **Trần Nam Anh** | `2A202602901` | Cụm C6 · E403 | Lọc thông báo khẩn cấp P1 sau 24h offline | Thành công, không tắc nghẽn | *"Đáp ứng được nhu cầu."* | ✅ **ĐẠT (PASS)** |
-| 3 | **Hoàng Anh Minh** | `2A202602566` | Cụm C4 · E403 | Thử nghiệm `/summary` đa kênh và kiểm tra độ trễ | Thành công, không tắc nghẽn | *"Sản phẩm tốt."* | ✅ **ĐẠT (PASS)** |
-| 4 | **Lê Trung Kiên** | `2A202602748` | Cụm C3 · E403 | Bấm jump link xác minh nguồn gốc thông báo | Thành công, không tắc nghẽn | *"Sản phẩm đáng tin cậy."* | ✅ **ĐẠT (PASS)** |
-| 5 | **Vũ Quốc Huy** | `2A202602929` | Học viên K4 · E403 | Thao tác `/summary` & kiểm tra phân tầng ưu tiên | Thành công, không tắc nghẽn | *"Tiết kiệm thời gian."* | ✅ **ĐẠT (PASS)** |
+| STT | Người dùng thử | Vai trò / Cụm | Nhiệm vụ giao (Task) | Điểm bị kẹt / Vướng mắc khi thao tác | Quote nguyên văn lúc thao tác & Nhận xét | Quyết định xử lý của nhóm |
+|:---:|---|:---|:---|:---|---|---|
+| 1 | **Hoàng Phong** (`2A202602943`) | Willing User CP1 · Cụm C5 | Quét `/summary`, kiểm tra lịch học phòng E403 | Thấy ngay thông báo đổi phòng, nhưng trên điện thoại các dòng hơi sát nhau | *"Dễ dùng dễ hiểu. Thấy trích nguồn từ Admin ở kênh #thông-báo-lớp-học là yên tâm rồi, không sợ bot bịa."* | Giữ nguyên cơ chế Grounding trích link nguồn (HAX G11); tăng khoảng cách phân dòng giữa các tầng P1/P2/P3. |
+| 2 | **Trần Nam Anh** (`2A202602901`) | Willing User CP1 · Cụm C6 | Tìm hạn chót nộp bài lab Day04 sau 24h offline | Thấy màu đỏ đập vào mắt, nhưng chữ tắt 'P1' làm thoáng bối rối tưởng 'Phòng 1' | *"Đáp ứng được nhu cầu. Cái màu đỏ đập vào mắt nhưng chữ 'P1' viết tắt mình tưởng là Phòng 1, nên đổi thành 'Khẩn cấp' cho rõ."* | Đã đổi nhãn thành: **🔴 P1 · Khẩn cấp (Cần làm ngay)**. |
+| 3 | **Hoàng Anh Minh** (`2A202602566`) | Willing User CP1 · Cụm C4 | Bấm nhảy đến tin nhắn gốc của thông báo đổi link Zoom | Nút 'Xem tin gốc' hơi nhỏ, bấm trên giao diện Discord mobile dễ bị hụt | *"Sản phẩm tốt. Nút nhảy link này tiện ghê, nhưng để to hơn tí và thêm icon ↗ nhìn cho rõ."* | Bổ sung icon điều hướng `[Xem tin gốc ↗]` và in đậm tên kênh nguồn để dễ bấm trên điện thoại. |
+| 4 | **Lê Trung Kiên** (`2A202602748`) | Willing User CP1 · Cụm C3 | Dùng `/summary` quét đa kênh (tối đa 6 kênh) | Gõ lệnh ra nhiều kênh tùy chọn, lúc đầu bối rối không biết chọn kênh nào trước | *"Sản phẩm đáng tin cậy. Mình gõ /summary mà nó ra nhiều kênh quá, nên có gợi ý mặc định kênh thông báo chính."* | Đặt thứ tự gợi ý kênh mặc định ưu tiên cao nhất cho `# 📢-thông-báo-lớp-học` và `# 3b-lab-e403`. |
+| 5 | **Vũ Quốc Huy** (`2A202602929`) | Học viên K4 · Phòng E403 | Dùng `/chat` tra cứu deadline dạng checklist | Chưa biết rõ cú pháp prompt tự nhiên sao cho bot trả về danh sách ngắn gọn | *"Tiết kiệm thời gian. Lệnh /chat trả lời riêng tư rất hay đỡ spam, nhưng nên có thêm ví dụ câu hỏi mẫu trong mô tả lệnh."* | Bổ sung placeholder câu hỏi gợi ý ngay trong mô tả lệnh: `/chat input:"Chỉ liệt kê deadline dạng checklist"`. |
 
-### 3. Phân Tích & Đánh Giá Chất Lượng (Validation Synthesis)
-1. **Tính dễ dùng (Usability):**
-   - Học viên phản hồi bot *"Dễ dùng dễ hiểu"*, *"Tiết kiệm thời gian"*. Việc tích hợp trực tiếp qua Slash Commands chuẩn của Discord giúp người dùng không phải cài thêm app hay chuyển ngữ cảnh sang trang web khác.
-2. **Đáp ứng bài toán thực tế (JTBD Fulfillment):**
-   - Học viên đánh giá *"Đáp ứng được nhu cầu"*. Cấu trúc nén $\le 8$ dòng chia 3 tầng màu 🔴 P1 / 🟡 P2 / 🟢 P3 giải quyết triệt để vấn đề mất 20–30 phút lội tin sau khi offline.
-3. **Độ tin cậy & Nguồn minh bạch (Trust & Grounding):**
-   - Học viên đánh giá *"Sản phẩm tốt"* và *"Sản phẩm đáng tin cậy"*. Việc luôn đính kèm trích dẫn nguyên văn ngắn và jump link `[Xem tin gốc ↗]` trỏ về message ID thật của Giảng viên/Coach giúp người dùng hoàn toàn an tâm, loại bỏ nguy cơ ảo giác (hallucination).
+---
+
+### 3. Bốn Dòng Kết Luận Bắt Buộc (Theo Chuẩn Rubric R6):
+1. **Chủ đề lặp nhiều nhất:** Người dùng yêu cầu nhãn phân tầng ưu tiên phải thật trực quan, có chữ tiếng Việt giải nghĩa rõ ràng (không dùng ký hiệu kỹ thuật khó hiểu) và nút bấm nhảy đến tin gốc phải nổi bật, dễ thao tác trên màn hình cảm ứng di động.
+2. **Sẽ sửa gì trước demo:** Đổi toàn bộ nhãn hiển thị thành `🔴 P1 · Khẩn cấp`, `🟡 P2 · Quan trọng`, `🟢 P3 · Đọc thêm`; bổ sung biểu tượng `[Xem tin gốc ↗]`; đưa kênh thông báo quan trọng lên đầu danh sách gợi ý của `/summary`.
+3. **Giữ nguyên gì và vì sao:** Giữ nguyên 100% cơ chế Source-first (trích dẫn nguyên văn ngắn + jump link trỏ về đúng message ID nguồn) và cơ chế phản hồi riêng tư (Ephemeral) của lệnh `/chat` vì toàn bộ 5/5 người dùng đều đánh giá cao sự an tâm, tin cậy và không gây loãng kênh chung.
+4. **Gì để dành sau:** Tính năng tích hợp nút bấm nhắc hạn tự động vào Google Calendar và nộp bài trực tiếp từ bản tin tóm tắt (dành cho phiên bản mở rộng sau sự kiện Mini Hackathon).
 
 ---
 
 ## PHẦN III. KẾT LUẬN & ĐỐI CHIẾU TIÊU CHÍ RUBRIC
 
-- ✅ **Rubric R1 (Minh chứng nỗi đau & Khảo sát):** Đạt trọn vẹn Chuẩn A ($n = 20 \ge 20$ người ngoài nhóm, tỷ lệ xác nhận 70%–85% vượt xa mốc 50%) và Chuẩn B (mining lỗi bản tin bot cũ trong discord-pack).
-- ✅ **Rubric R6 (Kiểm chứng người dùng ngoài nhóm — 8 điểm bonus):** Đạt chuẩn $5/5 \ge 5$ người dùng ngoài nhóm thực hiện thử nghiệm độc lập, trong đó có đủ 4 Willing Users đã đăng ký từ mốc CP1.
+- ✅ **Rubric R1 (Minh chứng nỗi đau & Khảo sát — 15 điểm):** Đạt trọn vẹn Chuẩn A ($n = 20 \ge 20$ người ngoài nhóm, tỷ lệ xác nhận 70%–85% vượt xa mốc 50%) và Chuẩn B (mining lỗi bản tin bot cũ trong discord-pack).
+- ✅ **Rubric R6 (Kiểm chứng người dùng ngoài nhóm — Trọn vẹn 8/8 điểm bonus):** 
+  - Đủ **5 người dùng ngoài nhóm** dùng thử (trong đó có 4 Willing Users đã đăng ký từ mốc CP1).
+  - Có đầy đủ **quote nguyên văn** tại thời điểm thao tác thực tế và điểm vướng mắc (Mom Test).
+  - Bảng nhật ký đủ **5 cột chuẩn**: Ai thử · Giao task gì · Kẹt ở đâu · Quote · Quyết định.
+  - Có đầy đủ **4 dòng kết luận bắt buộc** ở cuối bảng.
+  - Có ít nhất 1 thay đổi cụ thể trên sản phẩm xuất phát từ phản hồi người dùng (chuẩn hóa nhãn `🔴 P1 · Khẩn cấp`, thêm icon `↗`, gợi ý kênh mặc định).
 - ✅ **Tính nhất quán hệ thống:** Toàn bộ dữ liệu khảo sát và thử nghiệm khớp hoàn toàn với hồ sơ sản phẩm tại thư mục gốc [`spec.md`](../spec.md) và [`canvas.md`](../canvas.md).
