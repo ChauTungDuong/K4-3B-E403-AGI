@@ -4,7 +4,7 @@ import json
 
 from gemini import GeminiClient, load_prompt
 from models import ChatDraft, ChatResult, ChatSection, SafeMessage
-from privacy import redact_pii
+from privacy import normalize_ref, redact_pii
 
 
 class ChatService:
@@ -60,9 +60,10 @@ class ChatService:
         valid_refs = {item.ref for item in messages}
         sections: list[ChatSection] = []
         for section in draft.sections:
+            candidate_refs = [normalize_ref(ref) for ref in section.evidence_refs]
             refs = list(
                 dict.fromkeys(
-                    ref for ref in section.evidence_refs if ref in valid_refs
+                    ref for ref in candidate_refs if ref in valid_refs
                 )
             )
             heading = " ".join(section.heading.split())

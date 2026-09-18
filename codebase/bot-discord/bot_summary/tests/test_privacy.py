@@ -54,6 +54,15 @@ class PrivacyTests(unittest.TestCase):
         with self.assertRaises(PrivacyError):
             ensure_safe_output("Liên hệ user@example.com")
 
+    def test_normalize_ref_pads_leading_zeros(self) -> None:
+        from privacy import normalize_ref
+        self.assertEqual(normalize_ref("MSG_30"), "MSG_030")
+        self.assertEqual(normalize_ref("MSG_030"), "MSG_030")
+        self.assertEqual(normalize_ref("msg_1"), "MSG_001")
+        self.assertEqual(normalize_ref("MSG_249"), "MSG_249")
+        self.assertEqual(normalize_ref("MSG_1000"), "MSG_1000")
+        self.assertEqual(normalize_ref("CUSTOM"), "CUSTOM")
+
 
 if __name__ == "__main__":
     unittest.main()

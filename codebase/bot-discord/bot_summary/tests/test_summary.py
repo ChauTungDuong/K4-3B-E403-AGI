@@ -148,6 +148,41 @@ class SummaryPipelineTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.tasks[0].owner_ref, "Learner")
         self.assertEqual(result.tasks[1].owner_ref, "USER_YOU")
 
+    async def test_unpadded_refs_match_padded_messages(self) -> None:
+        draft = SummaryDraft(
+            executive_summary="Có việc cần làm.",
+            tasks=[
+                TaskCandidate(
+                    title="Đề cử thành viên chấm điểm",
+                    priority="P2",
+                    status="open",
+                    reason="Chấm điểm chéo",
+                    confidence=0.9,
+                    evidence_refs=["MSG_30"],
+                )
+            ],
+        )
+
+        class FakeLLM:
+            async def generate(self, prompt, schema):
+                return draft
+
+        service = SummaryService(FakeLLM())
+        result = await service.analyze(
+            [
+                SafeMessage(
+                    ref="MSG_030",
+                    channel_ref="CHANNEL_01",
+                    author_ref="USER_01",
+                    created_at=datetime.now(UTC),
+                    content="Trước 11h đề cử 01 thành viên chấm điểm",
+                )
+            ]
+        )
+
+        self.assertEqual(len(result.tasks), 1)
+        self.assertEqual(result.tasks[0].evidence_refs, ["MSG_030"])
+
 
 if __name__ == "__main__":
     unittest.main()

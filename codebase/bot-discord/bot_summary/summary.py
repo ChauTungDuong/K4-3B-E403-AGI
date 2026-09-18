@@ -14,6 +14,7 @@ from models import (
     TaskCandidate,
     TaskItem,
 )
+from privacy import normalize_ref
 
 
 _P0_WORDS = {
@@ -98,8 +99,9 @@ class SummaryService:
         candidate: TaskCandidate,
         by_ref: dict[str, SafeMessage],
     ) -> TaskItem | None:
-        # ID bịa bị loại; task không còn nguồn hợp lệ cũng bị loại.
-        refs = list(dict.fromkeys(ref for ref in candidate.evidence_refs if ref in by_ref))
+        # ID bịa bị loại; task không còn nguồn hợp lệ cũng bị loại. Chuẩn hóa ref (ví dụ MSG_30 -> MSG_030).
+        candidate_refs = [normalize_ref(ref) for ref in candidate.evidence_refs]
+        refs = list(dict.fromkeys(ref for ref in candidate_refs if ref in by_ref))
         if (
             not refs
             or not candidate.title.strip()
@@ -201,7 +203,8 @@ def _valid_evidence_items(
 ) -> list[EvidenceItem]:
     result: list[EvidenceItem] = []
     for item in items:
-        refs = list(dict.fromkeys(ref for ref in item.evidence_refs if ref in valid_refs))
+        candidate_refs = [normalize_ref(ref) for ref in item.evidence_refs]
+        refs = list(dict.fromkeys(ref for ref in candidate_refs if ref in valid_refs))
         if refs and item.text.strip():
             result.append(EvidenceItem(text=item.text.strip(), evidence_refs=refs[:5]))
     return result

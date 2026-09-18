@@ -46,6 +46,17 @@ def contains_pii(text: str) -> bool:
     return any(pattern.search(text) for _, pattern in _PATTERNS)
 
 
+_REF_PATTERN = re.compile(r"^msg_?(\d+)$", re.I)
+
+
+def normalize_ref(ref: str) -> str:
+    """Chuẩn hóa ref từ model, ví dụ 'MSG_30' -> 'MSG_030' hoặc 'msg_1' -> 'MSG_001'."""
+    match = _REF_PATTERN.match(ref.strip())
+    if match:
+        return f"MSG_{int(match.group(1)):03d}"
+    return ref.strip().upper()
+
+
 def ensure_safe_output(text: str) -> None:
     """Chặn report nếu model tạo lại dữ liệu có hình dạng PII."""
     if contains_pii(text):

@@ -15,6 +15,7 @@ from models import (
     TrendDraft,
     TrendResult,
 )
+from privacy import normalize_ref
 
 
 @dataclass(slots=True)
@@ -204,7 +205,8 @@ def calculate_metrics(
 
 
 def _valid_refs(refs: list[str], messages: dict[str, SafeMessage]) -> list[str]:
-    return list(dict.fromkeys(ref for ref in refs if ref in messages))
+    candidate_refs = [normalize_ref(ref) for ref in refs]
+    return list(dict.fromkeys(ref for ref in candidate_refs if ref in messages))
 
 
 def _merge_candidates(candidates: list[TopicCandidate]) -> list[TopicCandidate]:
