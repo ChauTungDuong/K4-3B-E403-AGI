@@ -1,5 +1,7 @@
 .env
 .venv/
+venv/
+.uv-python/
 __pycache__/
 *.py[cod]
 bot.db
